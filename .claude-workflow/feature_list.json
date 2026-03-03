@@ -1,0 +1,231 @@
+{
+  "project": "SmallGreen",
+  "module": "助剂桶管理",
+  "created_at": "2026-03-03",
+  "project_type": ".NET 8 + WPF",
+  "features": [
+    {
+      "id": "FEAT-001",
+      "category": "DTO",
+      "priority": "high",
+      "description": "创建助剂桶相关的 DTO 类",
+      "details": [
+        "AssBucketDto - 查询响应",
+        "MixedComponentDto - 混合组分",
+        "UpdateAssBucketDto - 更新请求",
+        "CreateMixedComponentDto - 创建组分请求",
+        "UpdateMixedComponentDto - 更新组分请求"
+      ],
+      "files": [
+        "SmallGreen.Dto/Machine/AssBucketDto.cs",
+        "SmallGreen.Dto/Machine/MixedComponentDto.cs",
+        "SmallGreen.Dto/Machine/UpdateAssBucketDto.cs",
+        "SmallGreen.Dto/Machine/CreateMixedComponentDto.cs",
+        "SmallGreen.Dto/Machine/UpdateMixedComponentDto.cs"
+      ],
+      "status": "pending",
+      "test_file": null
+    },
+    {
+      "id": "FEAT-002",
+      "category": "API",
+      "priority": "high",
+      "description": "GET /AssInfo/Buckets - 获取所有助剂桶列表",
+      "details": [
+        "返回包含混合组分的完整列表",
+        "按 Sequence 排序",
+        "包含所属子系统名称"
+      ],
+      "test_steps": [
+        "启动 API 服务",
+        "调用 GET /AssInfo/Buckets",
+        "验证返回状态码 200",
+        "验证返回数据结构正确",
+        "验证包含混合组分数据"
+      ],
+      "files": [
+        "SmallGreen.API/Controllers/AssInfoController.cs"
+      ],
+      "status": "pending",
+      "test_file": "tests/integration/AssInfo/BucketsQueryTests.cs"
+    },
+    {
+      "id": "FEAT-003",
+      "category": "API",
+      "priority": "high",
+      "description": "PUT /AssInfo/Buckets/{id} - 更新助剂桶基本信息",
+      "details": [
+        "更新 CodeNumber、Name、Concentration、IsMixed 字段",
+        "验证 ID 存在性",
+        "返回更新后的数据"
+      ],
+      "test_steps": [
+        "调用 PUT /AssInfo/Buckets/{id}",
+        "验证返回状态码 200",
+        "验证数据库已更新",
+        "测试不存在的 ID 返回错误"
+      ],
+      "files": [
+        "SmallGreen.API/Controllers/AssInfoController.cs"
+      ],
+      "status": "pending",
+      "test_file": "tests/integration/AssInfo/BucketsUpdateTests.cs"
+    },
+    {
+      "id": "FEAT-004",
+      "category": "API",
+      "priority": "high",
+      "description": "POST /AssInfo/MixedComponent - 新增混合组分",
+      "details": [
+        "验证 ParentId 存在且 IsMixed = true",
+        "创建新的混合组分记录",
+        "返回创建的组分数据"
+      ],
+      "test_steps": [
+        "调用 POST /AssInfo/MixedComponent",
+        "验证返回状态码 200",
+        "验证数据库已创建记录",
+        "测试 ParentId 不存在时返回错误"
+      ],
+      "files": [
+        "SmallGreen.API/Controllers/AssInfoController.cs"
+      ],
+      "status": "pending",
+      "test_file": "tests/integration/AssInfo/MixedComponentCreateTests.cs"
+    },
+    {
+      "id": "FEAT-005",
+      "category": "API",
+      "priority": "high",
+      "description": "PUT /AssInfo/MixedComponent/{id} - 更新混合组分",
+      "details": [
+        "更新 CodeNumber、Name、Concentration、Ratio 字段",
+        "验证 ID 存在性"
+      ],
+      "test_steps": [
+        "调用 PUT /AssInfo/MixedComponent/{id}",
+        "验证返回状态码 200",
+        "验证数据库已更新",
+        "测试不存在的 ID 返回错误"
+      ],
+      "files": [
+        "SmallGreen.API/Controllers/AssInfoController.cs"
+      ],
+      "status": "pending",
+      "test_file": "tests/integration/AssInfo/MixedComponentUpdateTests.cs"
+    },
+    {
+      "id": "FEAT-006",
+      "category": "API",
+      "priority": "high",
+      "description": "DELETE /AssInfo/MixedComponent/{id} - 删除混合组分",
+      "details": [
+        "验证 ID 存在性",
+        "删除指定的混合组分"
+      ],
+      "test_steps": [
+        "调用 DELETE /AssInfo/MixedComponent/{id}",
+        "验证返回状态码 200",
+        "验证数据库记录已删除",
+        "测试不存在的 ID 返回错误"
+      ],
+      "files": [
+        "SmallGreen.API/Controllers/AssInfoController.cs"
+      ],
+      "status": "pending",
+      "test_file": "tests/integration/AssInfo/MixedComponentDeleteTests.cs"
+    },
+    {
+      "id": "FEAT-007",
+      "category": "WPF",
+      "priority": "high",
+      "description": "创建助剂桶管理主页面 AssBucketManagementView",
+      "details": [
+        "DataGrid 展示助剂桶列表",
+        "行展开显示混合组分",
+        "刷新按钮",
+        "编辑按钮"
+      ],
+      "test_steps": [
+        "启动桌面应用",
+        "导航到助剂桶管理页面",
+        "验证 DataGrid 显示数据",
+        "验证行展开功能",
+        "验证刷新功能"
+      ],
+      "files": [
+        "SmallGreen.Desktop.Settings/Views/AssBucketManagementView.xaml",
+        "SmallGreen.Desktop.Settings/ViewModels/AssBucketManagementViewModel.cs"
+      ],
+      "status": "pending",
+      "test_file": null
+    },
+    {
+      "id": "FEAT-008",
+      "category": "WPF",
+      "priority": "medium",
+      "description": "创建编辑助剂桶弹窗 AssBucketEditDialog",
+      "details": [
+        "显示所属系统（只读）",
+        "显示管道顺序（只读）",
+        "可编辑：编号、名称、浓度、是否混合",
+        "表单验证"
+      ],
+      "test_steps": [
+        "点击编辑按钮",
+        "验证弹窗显示正确数据",
+        "修改字段并保存",
+        "验证验证规则生效"
+      ],
+      "files": [
+        "SmallGreen.Desktop.Settings/Dialogs/AssBucketEditDialog.xaml",
+        "SmallGreen.Desktop.Settings/Dialogs/AssBucketEditDialogViewModel.cs"
+      ],
+      "status": "pending",
+      "test_file": null
+    },
+    {
+      "id": "FEAT-009",
+      "category": "WPF",
+      "priority": "medium",
+      "description": "创建编辑混合组分弹窗 MixedComponentEditDialog",
+      "details": [
+        "支持新增和编辑模式",
+        "可编辑：组分编号、名称、浓度、比例",
+        "表单验证"
+      ],
+      "test_steps": [
+        "点击新增/编辑组分按钮",
+        "验证弹窗显示",
+        "填写/修改字段并保存",
+        "验证验证规则生效"
+      ],
+      "files": [
+        "SmallGreen.Desktop.Settings/Dialogs/MixedComponentEditDialog.xaml",
+        "SmallGreen.Desktop.Settings/Dialogs/MixedComponentEditDialogViewModel.cs"
+      ],
+      "status": "pending",
+      "test_file": null
+    },
+    {
+      "id": "FEAT-010",
+      "category": "WPF",
+      "priority": "medium",
+      "description": "配置菜单导航",
+      "details": [
+        "在 MainWindowViewModel.Configure 中添加菜单项",
+        "配置导航到 AssBucketManagementView"
+      ],
+      "test_steps": [
+        "启动桌面应用",
+        "验证菜单显示助剂桶管理",
+        "点击菜单验证页面导航"
+      ],
+      "files": [
+        "SmallGreen.Desktop.Settings/ViewModels/MainWindowViewModel.cs"
+      ],
+      "status": "pending",
+      "test_file": null
+    }
+  ]
+}
