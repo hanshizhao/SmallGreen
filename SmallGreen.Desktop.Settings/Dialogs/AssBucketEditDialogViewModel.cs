@@ -17,6 +17,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
         private string? name;
         private double concentration;
         private bool isMixed;
+        private string? errorMessage;
 
         public string? SubSystemName
         {
@@ -54,6 +55,18 @@ namespace SmallGreen.Desktop.Settings.Dialogs
             set => SetProperty(ref isMixed, value);
         }
 
+        public string? ErrorMessage
+        {
+            get => errorMessage;
+            set
+            {
+                SetProperty(ref errorMessage, value);
+                RaisePropertyChanged(nameof(HasError));
+            }
+        }
+
+        public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+
         public bool HasChanges { get; private set; }
 
         public string HostName { get; set; } = "Root";
@@ -74,6 +87,8 @@ namespace SmallGreen.Desktop.Settings.Dialogs
         public void OnDialogOpend(IDialogParameters parameters)
         {
             if (parameters == null) return;
+
+            ErrorMessage = null;
 
             if (parameters.TryGetValue("Bucket", out AssBucketDto bucket) && bucket != null)
             {
@@ -128,9 +143,10 @@ namespace SmallGreen.Desktop.Settings.Dialogs
             DialogHost.Close(HostName, new DialogResult(ButtonResult.Ignore));
         }
 
-        private async Task ShowError(string message)
+        private Task ShowError(string message)
         {
-            await DialogHost.Show(message, HostName);
+            ErrorMessage = message;
+            return Task.CompletedTask;
         }
     }
 }
