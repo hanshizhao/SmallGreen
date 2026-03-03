@@ -9,9 +9,9 @@
 
 | 状态 | 数量 | 说明 |
 |------|------|------|
-| ✅ 完成 | 0 | 已完成并验证 |
+| ✅ 完成 | 1 | 已完成并验证 |
 | 🔄 进行中 | 0 | 正在开发 |
-| ⏳ 待开始 | 10 | 等待开发 |
+| ⏳ 待开始 | 9 | 等待开发 |
 
 ---
 
@@ -19,7 +19,7 @@
 
 ### DTO 层
 
-- [ ] **FEAT-001**: 创建助剂桶相关的 DTO 类
+- [x] **FEAT-001**: 创建助剂桶相关的 DTO 类
   - AssBucketDto
   - MixedComponentDto
   - UpdateAssBucketDto
@@ -50,6 +50,12 @@
 - 初始化工作流环境
 - 创建功能清单 (10 个功能点)
 - 创建进度跟踪文档
+- ✅ **FEAT-001 完成**: 创建助剂桶相关 DTO 类
+  - AssBucketDto.cs - 查询响应
+  - MixedComponentDto.cs - 混合组分
+  - UpdateAssBucketDto.cs - 更新请求
+  - CreateMixedComponentDto.cs - 创建组分请求
+  - UpdateMixedComponentDto.cs - 更新组分请求
 
 ---
 

@@ -23,7 +23,7 @@
         "SmallGreen.Dto/Machine/CreateMixedComponentDto.cs",
         "SmallGreen.Dto/Machine/UpdateMixedComponentDto.cs"
       ],
-      "status": "pending",
+      "status": "completed",
       "test_file": null
     },
     {
