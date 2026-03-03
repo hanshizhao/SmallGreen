@@ -1,0 +1,6 @@
+@SmallGreen.API_HostAddress = http://localhost:5082
+
+GET {{SmallGreen.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

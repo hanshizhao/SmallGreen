@@ -1,0 +1,109 @@
+<UserControl x:Class="SmallGreen.Desktop.Settings.Views.ChemicalBucketDetailView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converters="clr-namespace:SmallGreen.Desktop.Settings.Converters"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="600"
+             Height="280">
+
+    <UserControl.Resources>
+        <converters:BooleanToInverseConverter x:Key="BooleanToInverseConverter"/>
+    </UserControl.Resources>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,16">
+            <md:PackIcon Kind="ChemicalWeapon" Width="24" Height="24" VerticalAlignment="Center"
+                         Foreground="{DynamicResource PrimaryHueMidBrush}"/>
+            <TextBlock Text="{Binding Bucket.CodeNumber, StringFormat='桶详情 - {0}'}"
+                       FontSize="18" FontWeight="Bold" Margin="8,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Basic Info -->
+            <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                <TextBlock Text="基本信息" FontWeight="Bold" Margin="0,0,0,8"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="当前液位:" Margin="0,4"/>
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Bucket.Level, StringFormat={}{0:F1} L}" Margin="8,4" FontWeight="Bold"/>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="桶容量:" Margin="0,4"/>
+                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Bucket.MaxCapacity, StringFormat={}{0:F0} L}" Margin="8,4"/>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="液位百分比:" Margin="0,4"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding LevelPercentage, StringFormat={}{0:F1}%}" Margin="8,4"/>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="上次配液:" Margin="0,4"/>
+                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Bucket.LastCompleteTime, StringFormat=yyyy-MM-dd HH:mm}" Margin="8,4"/>
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" Text="所属系统:" Margin="0,4"/>
+                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Bucket.SubSystemName}" Margin="8,4"/>
+                </Grid>
+            </StackPanel>
+
+            <Separator Grid.Column="1" Style="{StaticResource MaterialDesignVerticalSeparator}" Margin="8,0"/>
+
+            <!-- Concentration Settings -->
+            <StackPanel Grid.Column="2" Margin="16,0,0,0">
+                <TextBlock Text="浓度设置" FontWeight="Bold" Margin="0,0,0,8"/>
+
+                <TextBlock Text="助剂浓度:" Margin="0,8"/>
+                <Grid Margin="0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0"
+                             Text="{Binding Concentration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             TextAlignment="Right"
+                             Padding="8,6"/>
+                    <TextBlock Grid.Column="1" Text=" g/L"
+                               VerticalAlignment="Center" Margin="8,0,0,0" FontSize="14"/>
+                </Grid>
+
+                <TextBlock Text="说明：每升溶液中助剂的含量，用于计算助剂消耗量"
+                           FontSize="11" Foreground="Gray" Margin="0,8,0,0"
+                           TextWrapping="Wrap"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                    <Button Content="保存"
+                            Command="{Binding SaveCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}"
+                            IsEnabled="{Binding IsSaving, Converter={StaticResource BooleanToInverseConverter}}"
+                            Margin="0,0,8,0"/>
+                    <Button Content="取消"
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource MaterialDesignFlatButton}"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

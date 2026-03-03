@@ -1,0 +1,166 @@
+﻿<UserControl x:Class="SmallGreen.Desktop.Settings.Views.PRCSDataQueryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:SmallGreen.Desktop.Settings.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SmallGreen.Desktop.Settings.ViewModels"
+             d:DataContext="{d:DesignInstance Type=vm:PRCSDataQueryViewModel}"
+             d:DesignHeight="650"
+             d:DesignWidth="1136"
+             mc:Ignorable="d">
+    <Grid TextBlock.FontSize="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <RowDefinition />
+            <RowDefinition Height="40" />
+        </Grid.RowDefinitions>
+        <Border Grid.Row="1"
+                BorderBrush="{StaticResource MaterialDesignDivider}"
+                BorderThickness="0,1" />
+        <StackPanel Margin="20,0,0,0"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Text="开始时间" />
+                <DatePicker Width="120"
+                            Margin="10"
+                            VerticalAlignment="Center"
+                            SelectedDate="{Binding StartDateTime}"
+                            Style="{StaticResource MaterialDesignDatePicker}" />
+            </StackPanel>
+
+            <StackPanel Margin="20,0,0,0" Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Text="结束时间" />
+                <DatePicker Width="120"
+                            Margin="10"
+                            VerticalAlignment="Center"
+                            SelectedDate="{Binding EndDateTime}"
+                            Style="{StaticResource MaterialDesignDatePicker}" />
+            </StackPanel>
+
+            <Button Height="30"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    Command="{Binding QueryCommand}">
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Width="23"
+                                             Height="23"
+                                             VerticalAlignment="Center"
+                                             Kind="Magnify" />
+                    <TextBlock Margin="5,0,0,0"
+                               VerticalAlignment="Center"
+                               Text="查询" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+        <Button Margin="0,0,20,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Command="{Binding ExportToExcelCommand}">
+            <StackPanel Orientation="Horizontal">
+                <materialDesign:PackIcon Width="23"
+                                         Height="23"
+                                         Kind="MicrosoftExcel" />
+                <TextBlock Margin="5,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="导出到Excel" />
+            </StackPanel>
+        </Button>
+        <DataGrid Grid.Row="1"
+                  Margin="10"
+                  AutoGenerateColumns="False"
+                  Background="#e9e9e9"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  CanUserResizeRows="False"
+                  CanUserSortColumns="False"
+                  IsReadOnly="True"
+                  ItemsSource="{Binding PageInfo.Items}">
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Width="*"
+                                    Binding="{Binding CardNo}"
+                                    Header="卡号" />
+                <DataGridTemplateColumn Width="2*" Header="机台">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Run Text="{Binding EquipmentCodeNumber}" />
+                                <Run Text="{Binding EquipmentName}" />
+                                <Run Text="-" />
+                                <Run Text="{Binding BulkCodeNumber}" />
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Width="180" Header="计划/实际配液体积&lt;L&gt;">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock FontWeight="Bold">
+                                <Run Text="{Binding PlanVolume}" />
+                                <Run Text="/" />
+                                <Run Foreground="{StaticResource NormalBrush}" Text="{Binding ActualVolume}" />
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Width="1.5*"
+                                    Binding="{Binding CompletedDateTime, StringFormat=yyyy-MM-dd HH:mm:ss}"
+                                    Header="完成时间" />
+                <DataGridTextColumn Width="0.5*"
+                                    Binding="{Binding IsChange}"
+                                    Header="换单" />
+                <DataGridTemplateColumn Width="0.8*" Header="详情">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock>
+                                <Hyperlink Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}, Path=DataContext.ShowDetailCommand}" CommandParameter="{Binding .}">
+                                    <Run Text="查看详情" />
+                                </Hyperlink>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Grid Grid.Row="2"
+              VerticalAlignment="Center"
+              TextBlock.FontSize="14">
+            <TextBlock Margin="20,0,0,0" HorizontalAlignment="Left">
+                <Run Text="共" />
+                <Run d:Text="20" Text="{Binding PageInfo.TotalPageCount, Mode=OneWay}" />
+                <Run Text="页，" />
+                <Run d:Text="300" Text="{Binding PageInfo.TotalItemCount}" />
+                <Run Text="条记录，每页" />
+                <Run d:Text="10" Text="{Binding PageInfo.PageSize}" />
+                <Run Text="条" />
+            </TextBlock>
+
+            <StackPanel Margin="0,0,20,0"
+                        HorizontalAlignment="Right"
+                        Orientation="Horizontal">
+                <TextBlock>
+                    <Run Text="当前第" />
+                    <Run d:Text="1" Text="{Binding PageInfo.PageNumber}" />
+                    <Run Text="页" />
+                </TextBlock>
+
+                <TextBlock Margin="15,0,0,0" IsEnabled="{Binding PageInfo.HasPreviousPage}">
+                    <Hyperlink Command="{Binding PageUpCommand}">
+                        <Run Text="上一页" />
+                    </Hyperlink>
+                </TextBlock>
+
+                <TextBlock Margin="15,0,0,0" IsEnabled="{Binding PageInfo.HasNextPage}">
+                    <Hyperlink Command="{Binding PageDownCommand}">
+                        <Run Text="下一页" />
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>
