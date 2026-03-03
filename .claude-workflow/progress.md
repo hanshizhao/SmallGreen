@@ -9,9 +9,9 @@
 
 | 状态 | 数量 | 说明 |
 |------|------|------|
-| ✅ 完成 | 1 | 已完成并验证 |
+| ✅ 完成 | 6 | 已完成并验证 |
 | 🔄 进行中 | 0 | 正在开发 |
-| ⏳ 待开始 | 9 | 等待开发 |
+| ⏳ 待开始 | 4 | 等待开发 |
 
 ---
 
@@ -28,11 +28,11 @@
 
 ### API 层
 
-- [ ] **FEAT-002**: GET /AssInfo/Buckets - 获取所有助剂桶列表
-- [ ] **FEAT-003**: PUT /AssInfo/Buckets/{id} - 更新助剂桶基本信息
-- [ ] **FEAT-004**: POST /AssInfo/MixedComponent - 新增混合组分
-- [ ] **FEAT-005**: PUT /AssInfo/MixedComponent/{id} - 更新混合组分
-- [ ] **FEAT-006**: DELETE /AssInfo/MixedComponent/{id} - 删除混合组分
+- [x] **FEAT-002**: GET /AssInfo/Buckets - 获取所有助剂桶列表
+- [x] **FEAT-003**: PUT /AssInfo/Buckets/{id} - 更新助剂桶基本信息
+- [x] **FEAT-004**: POST /AssInfo/MixedComponent - 新增混合组分
+- [x] **FEAT-005**: PUT /AssInfo/MixedComponent/{id} - 更新混合组分
+- [x] **FEAT-006**: DELETE /AssInfo/MixedComponent/{id} - 删除混合组分
 
 ### WPF 前端
 
@@ -56,31 +56,37 @@
   - UpdateAssBucketDto.cs - 更新请求
   - CreateMixedComponentDto.cs - 创建组分请求
   - UpdateMixedComponentDto.cs - 更新组分请求
+- ✅ **FEAT-002~006 完成**: 实现所有 API 接口
+  - GET /AssInfo/Buckets - 获取助剂桶列表
+  - PUT /AssInfo/Buckets/{id} - 更新助剂桶
+  - POST /AssInfo/MixedComponent - 新增混合组分
+  - PUT /AssInfo/MixedComponent/{id} - 更新混合组分
+  - DELETE /AssInfo/MixedComponent/{id} - 删除混合组分
 
 ---
 
 ## 技术备注
 
-### 依赖关系
+### API 接口路由
 
-```
-FEAT-001 (DTO) ──┬──> FEAT-002~006 (API)
-                 └──> FEAT-007~010 (WPF)
+| 方法 | 路由 | 说明 |
+|-----|------|------|
+| GET | `/AssInfo/Buckets` | 获取助剂桶列表 |
+| PUT | `/AssInfo/Buckets/{id}` | 更新助剂桶 |
+| POST | `/AssInfo/MixedComponent` | 新增混合组分 |
+| PUT | `/AssInfo/MixedComponent/{id}` | 更新混合组分 |
+| DELETE | `/AssInfo/MixedComponent/{id}` | 删除混合组分 |
 
-FEAT-002~006 (API) ──> FEAT-007 (主页面)
-```
+### 子系统判断逻辑
 
-### 建议开发顺序
-
-1. **Phase 1**: FEAT-001 (DTO 层)
-2. **Phase 2**: FEAT-002 ~ FEAT-006 (API 层)
-3. **Phase 3**: FEAT-007 ~ FEAT-010 (WPF 前端)
+- Sequence 1-12: 前处理
+- Sequence 13+: 固色
 
 ---
 
 ## 验收标准
 
-- [ ] 所有 API 接口可通过 Swagger 测试
+- [x] 所有 API 接口可通过 Swagger 测试
 - [ ] WPF 页面可正常显示和操作
 - [ ] 表单验证规则生效
 - [ ] 错误处理正确显示

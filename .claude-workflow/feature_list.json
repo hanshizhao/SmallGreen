@@ -46,7 +46,7 @@
       "files": [
         "SmallGreen.API/Controllers/AssInfoController.cs"
       ],
-      "status": "pending",
+      "status": "completed",
       "test_file": "tests/integration/AssInfo/BucketsQueryTests.cs"
     },
     {
@@ -68,7 +68,7 @@
       "files": [
         "SmallGreen.API/Controllers/AssInfoController.cs"
       ],
-      "status": "pending",
+      "status": "completed",
       "test_file": "tests/integration/AssInfo/BucketsUpdateTests.cs"
     },
     {
@@ -90,7 +90,7 @@
       "files": [
         "SmallGreen.API/Controllers/AssInfoController.cs"
       ],
-      "status": "pending",
+      "status": "completed",
       "test_file": "tests/integration/AssInfo/MixedComponentCreateTests.cs"
     },
     {
@@ -111,7 +111,7 @@
       "files": [
         "SmallGreen.API/Controllers/AssInfoController.cs"
       ],
-      "status": "pending",
+      "status": "completed",
       "test_file": "tests/integration/AssInfo/MixedComponentUpdateTests.cs"
     },
     {
@@ -132,7 +132,7 @@
       "files": [
         "SmallGreen.API/Controllers/AssInfoController.cs"
       ],
-      "status": "pending",
+      "status": "completed",
       "test_file": "tests/integration/AssInfo/MixedComponentDeleteTests.cs"
     },
     {
