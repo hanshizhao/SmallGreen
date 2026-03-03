@@ -5,6 +5,7 @@
         /// <summary>
         /// Id
         /// </summary>
+        [SqlSugar.SugarColumn(IsPrimaryKey = true)]
         public long Id { get; set; }
 
         /// <summary>

@@ -34,7 +34,7 @@ namespace SmallGreen.Desktop.Settings.Services
             BaseRequest request = new()
             {
                 Method = RestSharp.Method.Put,
-                Route = $"AssInfo/Buckets/{dto.Id}",
+                Route = $"AssInfo/UpdateBucket/Buckets/{dto.Id}",
                 Parameter = dto
             };
             return await client.ExecuteAsync<AssBucketDto>(request);
@@ -62,7 +62,7 @@ namespace SmallGreen.Desktop.Settings.Services
             BaseRequest request = new()
             {
                 Method = RestSharp.Method.Put,
-                Route = $"AssInfo/MixedComponent/{dto.Id}",
+                Route = $"AssInfo/UpdateMixedComponent/MixedComponent/{dto.Id}",
                 Parameter = dto
             };
             return await client.ExecuteAsync<MixedComponentDto>(request);
@@ -76,7 +76,7 @@ namespace SmallGreen.Desktop.Settings.Services
             BaseRequest request = new()
             {
                 Method = RestSharp.Method.Delete,
-                Route = $"AssInfo/MixedComponent/{id}"
+                Route = $"AssInfo/DeleteMixedComponent/MixedComponent/{id}"
             };
             return await client.ExecuteAsync(request);
         }

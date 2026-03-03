@@ -19,12 +19,25 @@ namespace SmallGreen.Desktop.Settings.Dialogs
         private double concentration;
         private double ratio;
         private string title = "新增混合组分";
+        private string? errorMessage;
 
         public string Title
         {
             get => title;
             set => SetProperty(ref title, value);
         }
+
+        public string? ErrorMessage
+        {
+            get => errorMessage;
+            set
+            {
+                SetProperty(ref errorMessage, value);
+                RaisePropertyChanged(nameof(HasError));
+            }
+        }
+
+        public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
         public string? CodeNumber
         {
@@ -68,6 +81,8 @@ namespace SmallGreen.Desktop.Settings.Dialogs
         public void OnDialogOpend(IDialogParameters parameters)
         {
             if (parameters == null) return;
+
+            ErrorMessage = null;
 
             // Check if new or edit
             if (parameters.TryGetValue("IsNew", out bool isNewValue))
@@ -159,9 +174,10 @@ namespace SmallGreen.Desktop.Settings.Dialogs
             DialogHost.Close(HostName, new DialogResult(ButtonResult.Ignore));
         }
 
-        private async Task ShowError(string message)
+        private Task ShowError(string message)
         {
-            await DialogHost.Show(message, HostName);
+            ErrorMessage = message;
+            return Task.CompletedTask;
         }
     }
 }

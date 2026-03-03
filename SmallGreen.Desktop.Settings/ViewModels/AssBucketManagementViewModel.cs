@@ -132,7 +132,7 @@ namespace SmallGreen.Desktop.Settings.ViewModels
             if (component == null) return;
 
             var confirm = await ShowConfirmOperateView("确定要删除该混合组分吗？");
-            if (confirm.Result != ButtonResult.Yes) return;
+            if (confirm == null || confirm.Result != ButtonResult.Yes) return;
 
             Loading(true);
             var result = await assBucketService.DeleteMixedComponent(component.Id);

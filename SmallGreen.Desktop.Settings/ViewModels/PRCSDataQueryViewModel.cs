@@ -333,7 +333,7 @@ namespace SmallGreen.Desktop.Settings.ViewModels
                 Loading(false);
                 await Task.Delay(100);
                 var isOpen = await ShowConfirmOperateView("导出成功,是否立即打开？");
-                if (isOpen.Result != ButtonResult.Yes) return;
+                if (isOpen == null || isOpen.Result != ButtonResult.Yes) return;
 
                 System.Diagnostics.Process process = new System.Diagnostics.Process();
                 process.StartInfo.UseShellExecute = true;

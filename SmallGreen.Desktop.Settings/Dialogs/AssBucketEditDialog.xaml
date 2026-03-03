@@ -105,7 +105,7 @@
         </StackPanel>
 
         <!-- Buttons -->
-        <StackPanel Grid.Row="2"
+        <StackPanel Grid.Row="3"
                     Orientation="Horizontal"
                     HorizontalAlignment="Right"
                     Margin="0,16,0,0">
