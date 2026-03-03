@@ -157,7 +157,7 @@
         "SmallGreen.Desktop.Settings/Views/AssBucketManagementView.xaml",
         "SmallGreen.Desktop.Settings/ViewModels/AssBucketManagementViewModel.cs"
       ],
-      "status": "pending",
+      "status": "completed",
       "test_file": null
     },
     {
@@ -181,7 +181,7 @@
         "SmallGreen.Desktop.Settings/Dialogs/AssBucketEditDialog.xaml",
         "SmallGreen.Desktop.Settings/Dialogs/AssBucketEditDialogViewModel.cs"
       ],
-      "status": "pending",
+      "status": "completed",
       "test_file": null
     },
     {
@@ -204,7 +204,7 @@
         "SmallGreen.Desktop.Settings/Dialogs/MixedComponentEditDialog.xaml",
         "SmallGreen.Desktop.Settings/Dialogs/MixedComponentEditDialogViewModel.cs"
       ],
-      "status": "pending",
+      "status": "completed",
       "test_file": null
     },
     {
@@ -224,7 +224,7 @@
       "files": [
         "SmallGreen.Desktop.Settings/ViewModels/MainWindowViewModel.cs"
       ],
-      "status": "pending",
+      "status": "completed",
       "test_file": null
     }
   ]

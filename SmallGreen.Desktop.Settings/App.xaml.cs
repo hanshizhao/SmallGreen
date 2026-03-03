@@ -1,4 +1,5 @@
 ﻿using SmallGreen.Desktop.Settings.Common;
+using SmallGreen.Desktop.Settings.Dialogs;
 using SmallGreen.Desktop.Settings.IServices;
 using SmallGreen.Desktop.Settings.Services;
 using SmallGreen.Desktop.Settings.ViewModels;
@@ -32,12 +33,15 @@ namespace SmallGreen.Desktop.Settings
             containerRegistry.RegisterForNavigation<ConfirmOperateView, ConfirmOperateViewModel>();
             containerRegistry.RegisterForNavigation<UserPasswordChangeView, UserPasswordChangeViewModel>();
             containerRegistry.RegisterForNavigation<ErrorMessageView, ErrorMessageViewModel>();
+            containerRegistry.RegisterForNavigation<AssBucketEditDialog, AssBucketEditDialogViewModel>();
+            containerRegistry.RegisterForNavigation<MixedComponentEditDialog, MixedComponentEditDialogViewModel>();
 
             // 注册服务
             containerRegistry.Register<IDialogHostService, DialogHostService>();
             containerRegistry.Register<IUserService, UserService>();
             containerRegistry.Register<IPRCSDataService, PRCSDataService>();
             containerRegistry.Register<IChemicalBucketService, ChemicalBucketService>();
+            containerRegistry.Register<IAssBucketService, AssBucketService>();
             
 
 
@@ -47,6 +51,7 @@ namespace SmallGreen.Desktop.Settings
             containerRegistry.RegisterForNavigation<PRCSDataDetailView, PRCSDataDetailViewModel>();
             containerRegistry.RegisterForNavigation<ChemicalBucketView, ChemicalBucketViewModel>();
             containerRegistry.RegisterForNavigation<ChemicalBucketDetailView, ChemicalBucketDetailViewModel>();
+            containerRegistry.RegisterForNavigation<AssBucketManagementView, AssBucketManagementViewModel>();
             
 
 

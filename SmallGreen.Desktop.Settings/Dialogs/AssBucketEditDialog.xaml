@@ -1,0 +1,111 @@
+<UserControl x:Class="SmallGreen.Desktop.Settings.Dialogs.AssBucketEditDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:SmallGreen.Desktop.Settings.Dialogs"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DesignHeight="400" d:DesignWidth="400"
+             MinWidth="400">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock Grid.Row="0"
+                   Text="编辑助剂桶"
+                   FontSize="20"
+                   FontWeight="Bold"
+                   Margin="0,0,0,16"/>
+
+        <!-- Form -->
+        <StackPanel Grid.Row="1">
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="所属系统:" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding SubSystemName, Mode=OneWay}"
+                         IsReadOnly="True"
+                         Background="#F0F0F0"/>
+            </Grid>
+
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="管道顺序:" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding Sequence, Mode=OneWay}"
+                         IsReadOnly="True"
+                         Background="#F0F0F0"/>
+            </Grid>
+
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="编号:" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding CodeNumber, UpdateSourceTrigger=PropertyChanged}"
+                         md:HintAssist.Hint="请输入编号"/>
+            </Grid>
+
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="名称:" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                         md:HintAssist.Hint="请输入名称"/>
+            </Grid>
+
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="浓度(g/L):" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding Concentration, UpdateSourceTrigger=PropertyChanged}"
+                         md:HintAssist.Hint="请输入浓度"/>
+            </Grid>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="是否混合:" VerticalAlignment="Center"/>
+                <CheckBox Grid.Column="1"
+                          IsChecked="{Binding IsMixed}"
+                          VerticalAlignment="Center"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,16,0,0">
+            <Button Content="取消"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Command="{Binding CancelCommand}"
+                    Margin="0,0,8,0"/>
+            <Button Content="保存"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Command="{Binding SaveCommand}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

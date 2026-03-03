@@ -20,6 +20,8 @@
                     <!-- Converters -->
                     <converters:LevelToHeightConverter x:Key="LevelToHeightConverter" />
                     <converters:BooleanToInverseConverter x:Key="BooleanToInverseConverter" />
+                    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+                    <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" />
 
                     <!--<converter:TagToIconConverter x:Key="TagToIconConverter" />
                     <converter:ConnectionStatusToColor x:Key="ConnectionStatusToColor" />

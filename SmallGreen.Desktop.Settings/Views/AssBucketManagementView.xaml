@@ -1,0 +1,186 @@
+<UserControl x:Class="SmallGreen.Desktop.Settings.Views.AssBucketManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:SmallGreen.Desktop.Settings.Views"
+             xmlns:vm="clr-namespace:SmallGreen.Desktop.Settings.ViewModels"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:AssBucketManagementViewModel}"
+             d:DesignHeight="600" d:DesignWidth="900">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="16,8">
+            <Button Command="{Binding RefreshCommand}"
+                    Style="{StaticResource MaterialDesignOutlinedButton}">
+                <StackPanel Orientation="Horizontal">
+                    <md:PackIcon Kind="Refresh" Width="20" Height="20" VerticalAlignment="Center"/>
+                    <TextBlock Text="刷新" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- DataGrid -->
+        <DataGrid Grid.Row="1"
+                  Margin="8,0,8,8"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  IsReadOnly="True"
+                  ItemsSource="{Binding Buckets}"
+                  SelectedItem="{Binding SelectedBucket}"
+                  RowDetailsVisibilityMode="VisibleWhenSelected">
+
+            <DataGrid.Columns>
+                <!-- 所属系统 -->
+                <DataGridTextColumn Width="*"
+                                    MinWidth="80"
+                                    Binding="{Binding SubSystemName}"
+                                    Header="所属系统"/>
+
+                <!-- 管道顺序 -->
+                <DataGridTextColumn Width="*"
+                                    MinWidth="60"
+                                    Binding="{Binding Sequence}"
+                                    Header="管道顺序"/>
+
+                <!-- 编号 -->
+                <DataGridTextColumn Width="*"
+                                    MinWidth="80"
+                                    Binding="{Binding CodeNumber}"
+                                    Header="编号"/>
+
+                <!-- 名称 -->
+                <DataGridTextColumn Width="2*"
+                                    MinWidth="120"
+                                    Binding="{Binding Name}"
+                                    Header="名称"/>
+
+                <!-- 浓度 -->
+                <DataGridTextColumn Width="*"
+                                    MinWidth="80"
+                                    Binding="{Binding Concentration, StringFormat={}{0:F2} g/L}"
+                                    Header="浓度"/>
+
+                <!-- 最大容量 -->
+                <DataGridTextColumn Width="*"
+                                    MinWidth="80"
+                                    Binding="{Binding MaxV, StringFormat={}{0:F0} L}"
+                                    Header="最大容量"/>
+
+                <!-- 是否混合 -->
+                <DataGridTemplateColumn Width="*" MinWidth="70" Header="是否混合">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsMixed, Mode=OneWay}"
+                                      IsEnabled="False"
+                                      HorizontalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <!-- 编辑按钮 -->
+                <DataGridTemplateColumn Width="*" MinWidth="60" Header="操作">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="编辑"
+                                    Style="{StaticResource MaterialDesignFlatButton}"
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.EditBucketCommand}"
+                                    CommandParameter="{Binding}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+
+            <!-- Row Details - Mixed Components -->
+            <DataGrid.RowDetailsTemplate>
+                <DataTemplate>
+                    <Border Background="{StaticResource MaterialDesignPaper}"
+                            BorderBrush="{StaticResource MaterialDesignDivider}"
+                            BorderThickness="0,1,0,0"
+                            Padding="16,8">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Header with Add Button (only for mixed buckets) -->
+                            <StackPanel Grid.Row="0"
+                                        Orientation="Horizontal"
+                                        Margin="0,0,0,8"
+                                        Visibility="{Binding IsMixed, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <TextBlock Text="混合组分"
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+                                <Button Content="添加组分"
+                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                        Margin="16,0,0,0"
+                                        Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.AddComponentCommand}"
+                                        CommandParameter="{Binding}"/>
+                            </StackPanel>
+
+                            <!-- Mixed Components DataGrid -->
+                            <DataGrid Grid.Row="1"
+                                      AutoGenerateColumns="False"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      IsReadOnly="True"
+                                      ItemsSource="{Binding MixedComponents}"
+                                      Visibility="{Binding IsMixed, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                      MaxHeight="200">
+
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Width="100"
+                                                        Binding="{Binding CodeNumber}"
+                                                        Header="组分编号"/>
+                                    <DataGridTextColumn Width="150"
+                                                        Binding="{Binding Name}"
+                                                        Header="组分名称"/>
+                                    <DataGridTextColumn Width="100"
+                                                        Binding="{Binding Concentration, StringFormat={}{0:F2} g/L}"
+                                                        Header="组分浓度"/>
+                                    <DataGridTextColumn Width="80"
+                                                        Binding="{Binding Ratio, StringFormat={}{0:P2}}"
+                                                        Header="混合比例"/>
+
+                                    <DataGridTemplateColumn Width="140" Header="操作">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button Content="编辑"
+                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                            Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.EditComponentCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <Button Content="删除"
+                                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                                            Foreground="Red"
+                                                            Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.DeleteComponentCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <!-- Not a mixed bucket message -->
+                            <TextBlock Grid.Row="1"
+                                       Text="该助剂桶不是混合助剂"
+                                       FontStyle="Italic"
+                                       Foreground="Gray"
+                                       Visibility="{Binding IsMixed, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </DataGrid.RowDetailsTemplate>
+        </DataGrid>
+    </Grid>
+</UserControl>

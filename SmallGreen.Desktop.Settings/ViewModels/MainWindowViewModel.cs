@@ -84,7 +84,7 @@ namespace SmallGreen.Desktop.Settings.ViewModels
                 new ItemMenu("助剂信息管理", new List<SubItem>
                 {
                     new SubItem("助剂管理", nameof(ArthurView), false),
-                    new SubItem("助剂桶管理", nameof(ArthurView), false),
+                    new SubItem("助剂桶管理", nameof(AssBucketManagementView), false),
                 }, PackIconKind.ChemicalWeapon, false)
 
 

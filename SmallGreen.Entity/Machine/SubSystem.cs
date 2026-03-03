@@ -1,5 +1,4 @@
-﻿using Serilog;
-using SmallGreen.Common;
+﻿using SmallGreen.Common;
 using SmallGreen.Entity.Basic;
 using SmallGreen.Entity.Data;
 using SmallGreen.Entity.Interface;
@@ -105,8 +104,6 @@ namespace SmallGreen.Entity.Machine
 
         public async Task<OperateResult<PRCSData>> SavePRCSData(Equipment equipment, Bulk bulk)
         {
-            Log.Information("[配液完成] {EquipmentName}-{BulkCodeNumber} 开始处理配液完成逻辑", equipment.Name, bulk.CodeNumber);
-
             // 先将触发点位由1重置为0 防止重复向数据库写入消耗量信息
             if (bulk.TriggerComplete != null)
             {
@@ -114,14 +111,12 @@ namespace SmallGreen.Entity.Machine
                 var r = await PLC.Write(bulk.TriggerComplete);
                 if (!r.IsSuccess)
                 {
-                    Log.Error("[配液完成] {EquipmentName}-{BulkCodeNumber} 重置触发点位失败: {Message}", equipment.Name, bulk.CodeNumber, r.Message);
                     return new OperateResult<PRCSData>
                     {
                         IsSuccess = false,
                         Message = $"{equipment.Name}-{bulk.CodeNumber} 配液完成时，重置触发点位失败:{r.Message}"
                     };
                 }
-                Log.Information("[配液完成] {EquipmentName}-{BulkCodeNumber} 触发点位已重置为0", equipment.Name, bulk.CodeNumber);
             }
 
             // 查询助剂信息
@@ -151,15 +146,10 @@ namespace SmallGreen.Entity.Machine
             if (bulk.DataFomulaArray != null) listDom.Add(bulk.DataFomulaArray); // 配方量？
             if (bulk.DataRealLitreArray != null) listDom.Add(bulk.DataRealLitreArray); // 实际使用体积？
 
-            Log.Information("[配液完成] {EquipmentName}-{BulkCodeNumber} 准备读取PLC点位，点位数量: {Count}",
-                equipment.Name, bulk.CodeNumber, listDom.Count);
-
             var result = await PLC.ReadMultipleVars(listDom);
 
             if (!result.IsSuccess)
             {
-                Log.Error("[配液完成] {EquipmentName}-{BulkCodeNumber} 读取PLC点位失败: {Message}",
-                    equipment.Name, bulk.CodeNumber, result.Message);
                 return new OperateResult<PRCSData>
                 {
                     IsSuccess = false,
@@ -167,31 +157,10 @@ namespace SmallGreen.Entity.Machine
                 };
             }
 
-            // 记录从PLC读取的原始数据
-            Log.Information("[配液完成] {EquipmentName}-{BulkCodeNumber} PLC数据读取成功:\n" +
-                "  - DataLevel(实际配液体积): {DataLevel}\n" +
-                "  - DataPlanVolume(计划配液体积): {DataPlanVolume}\n" +
-                "  - DataFomulaArray(配方量数组): {DataFomulaArray}\n" +
-                "  - DataRealLitreArray(实际使用体积数组): {DataRealLitreArray}",
-                equipment.Name, bulk.CodeNumber,
-                bulk.DataLevel?.GetCurrentValue(),
-                bulk.DataPlanVolume?.GetCurrentValue(),
-                bulk.DataFomulaArray?.GetCurrentValue(),
-                bulk.DataRealLitreArray?.GetCurrentValue());
-
             // 处理数据
             // 处理实际使用体积
             var realLitreArr = StrToFloat(bulk.DataRealLitreArray?.GetCurrentValue() ?? "");
             var formularArr = StrToFloat(bulk.DataFomulaArray?.GetCurrentValue() ?? "");
-
-            Log.Information("[配液完成] {EquipmentName}-{BulkCodeNumber} 数组解析结果:\n" +
-                "  - realLitreArr(实际体积数组): [{RealLitreArr}], 长度: {RealLitreLength}\n" +
-                "  - formularArr(配方量数组): [{FormularArr}], 长度: {FormularLength}",
-                equipment.Name, bulk.CodeNumber,
-                string.Join(", ", realLitreArr),
-                realLitreArr.Length,
-                string.Join(", ", formularArr),
-                formularArr.Length);
 
             // 如果实际体积数组的个数不等于配方量数组的个数，那么就返回错误
             if (realLitreArr.Length != formularArr.Length)
@@ -220,16 +189,9 @@ namespace SmallGreen.Entity.Machine
             for (int i = 0; i < realLitreArr.Length; i++)
             {
                 var realLitre = realLitreArr[i];
-                if (realLitre == 0)
-                {
-                    Log.Warning("[配液完成] {EquipmentName}-{BulkCodeNumber} 管道号<{Sequence}> 实际体积为0，跳过",
-                        equipment.Name, bulk.CodeNumber, i + 1);
-                    continue;
-                }
+                if (realLitre == 0) continue;
 
                 var formular = formularArr[i];
-                Log.Information("[配液完成] {EquipmentName}-{BulkCodeNumber} 管道号<{Sequence}> 处理中: 实际体积={RealLitre}, 配方量={Formular}",
-                    equipment.Name, bulk.CodeNumber, i + 1, realLitre, formular);
 
                 // 固色系统(GS1)助剂 Sequence 从 13 开始，前处理从 1 开始
                 var sequenceOffset = this.SubSystemName == SubSystemName.GS1 ? 12 : 0;
@@ -334,18 +296,12 @@ namespace SmallGreen.Entity.Machine
 
             if (listDetail.Count < 1)
             {
-                Log.Warning("[配液完成] {EquipmentName}-{BulkCodeNumber} 检测不到助剂消耗量! " +
-                    "可能原因: realLitreArr全为0或为空。数组长度={ArrLength}, 数组内容=[{ArrContent}]",
-                    equipment.Name, bulk.CodeNumber, realLitreArr.Length, string.Join(", ", realLitreArr));
                 return new OperateResult<PRCSData>
                 {
                     IsSuccess = false,
                     Message = $"{equipment.Name}-{bulk.CodeNumber} 配液完成时，检测不到助剂消耗量"
                 };
             }
-
-            Log.Information("[配液完成] {EquipmentName}-{BulkCodeNumber} 处理完成，共生成 {DetailCount} 条助剂消耗记录",
-                equipment.Name, bulk.CodeNumber, listDetail.Count);
 
             prcsData.ListDetail = listDetail;
 
@@ -381,20 +337,15 @@ namespace SmallGreen.Entity.Machine
                 var cleaned = new string(part.Where(c =>
                     char.IsDigit(c) || c == '.' || c == '-' || c == '+').ToArray());
 
-                Log.Debug("[StrToFloat] 片段[{Index}] 原始: '{Part}', 过滤后: '{Cleaned}', 长度: {Len}",
-                    i, part, cleaned, cleaned.Length);
-
                 if (cleaned.Length > 0 &&
                     float.TryParse(cleaned, System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture, out float value))
                 {
                     result[i] = value;
-                    Log.Debug("[StrToFloat] 解析成功: {Value}", value);
                 }
                 else
                 {
                     result[i] = 0f;
-                    Log.Debug("[StrToFloat] 解析失败: cleaned='{Cleaned}', 长度={Len}", cleaned, cleaned.Length);
                 }
             }
 
