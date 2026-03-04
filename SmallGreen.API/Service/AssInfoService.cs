@@ -76,6 +76,61 @@ namespace SmallGreen.API.Service
         }
 
         /// <summary>
+        /// 根据ID获取助剂桶详情
+        /// </summary>
+        public async Task<ApiResponse<AssBucketDto>> GetBucketById(long id)
+        {
+            try
+            {
+                var ass = await new Repository<AssInfo>().AsQueryable()
+                    .Includes(it => it.ListMixedDetail)
+                    .FirstAsync(it => it.Id == id);
+
+                if (ass == null)
+                {
+                    return new ApiResponse<AssBucketDto>
+                    {
+                        IsSuccess = false,
+                        Message = $"助剂桶不存在: Id={id}"
+                    };
+                }
+
+                return new ApiResponse<AssBucketDto>
+                {
+                    IsSuccess = true,
+                    Content = new AssBucketDto
+                    {
+                        Id = ass.Id,
+                        SubSystemName = GetSubSystemName(ass.Sequence),
+                        Sequence = ass.Sequence,
+                        CodeNumber = ass.CodeNumber,
+                        Name = ass.Name,
+                        Concentration = ass.Concentration,
+                        MaxV = ass.MaxV,
+                        IsMixed = ass.IsMixed,
+                        MixedComponents = ass.ListMixedDetail?.Select(m => new MixedComponentDto
+                        {
+                            Id = m.Id,
+                            ParentId = m.ParentId,
+                            CodeNumber = m.CodeNumber,
+                            Name = m.Name,
+                            Concentration = m.Concentration,
+                            Ratio = m.Ratio
+                        }).ToList()
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<AssBucketDto>
+                {
+                    IsSuccess = false,
+                    Message = $"查询助剂桶详情异常: {ex.Message}"
+                };
+            }
+        }
+
+        /// <summary>
         /// 更新助剂桶基本信息
         /// </summary>
         public async Task<ApiResponse<AssBucketDto>> UpdateBucket(UpdateAssBucketDto dto)
@@ -173,7 +228,8 @@ namespace SmallGreen.API.Service
                 };
 
                 var repo = new Repository<MixedDetail>();
-                var id = await repo.InsertReturnIdentityAsync(detail);
+                // 使用 AsInsertable 显式忽略自增列
+                var id = await repo.AsInsertable(detail).ExecuteReturnBigIdentityAsync();
 
                 return new ApiResponse<MixedComponentDto>
                 {

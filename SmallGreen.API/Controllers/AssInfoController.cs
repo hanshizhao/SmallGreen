@@ -41,6 +41,16 @@ namespace SmallGreen.API.Controllers
         }
 
         /// <summary>
+        /// 根据ID获取助剂桶详情
+        /// </summary>
+        [HttpGet]
+        [Route("Buckets/{id}")]
+        public async Task<ApiResponse<AssBucketDto>> GetBucketById(long id)
+        {
+            return await assInfoService.GetBucketById(id);
+        }
+
+        /// <summary>
         /// 更新助剂桶基本信息
         /// </summary>
         [HttpPut]

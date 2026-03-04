@@ -40,10 +40,10 @@
                     <ColumnDefinition Width="100"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="组分编号:" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="助剂编号:" VerticalAlignment="Center"/>
                 <TextBox Grid.Column="1"
                          Text="{Binding CodeNumber, UpdateSourceTrigger=PropertyChanged}"
-                         md:HintAssist.Hint="请输入组分编号"/>
+                         md:HintAssist.Hint="请输入助剂编号"/>
             </Grid>
 
             <Grid Margin="0,0,0,12">
@@ -51,10 +51,10 @@
                     <ColumnDefinition Width="100"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="组分名称:" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="0" Text="助剂名称:" VerticalAlignment="Center"/>
                 <TextBox Grid.Column="1"
                          Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                         md:HintAssist.Hint="请输入组分名称"/>
+                         md:HintAssist.Hint="请输入助剂名称"/>
             </Grid>
 
             <Grid Margin="0,0,0,12">

@@ -27,6 +27,19 @@ namespace SmallGreen.Desktop.Settings.Services
         }
 
         /// <summary>
+        /// 根据ID获取助剂桶详情
+        /// </summary>
+        public async Task<ApiResponse<AssBucketDto>> GetBucketById(long id)
+        {
+            BaseRequest request = new()
+            {
+                Method = RestSharp.Method.Get,
+                Route = $"AssInfo/GetBucketById/Buckets/{id}"
+            };
+            return await client.ExecuteAsync<AssBucketDto>(request);
+        }
+
+        /// <summary>
         /// 更新助剂桶基本信息
         /// </summary>
         public async Task<ApiResponse<AssBucketDto>> UpdateBucket(UpdateAssBucketDto dto)

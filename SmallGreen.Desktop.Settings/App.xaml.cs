@@ -35,6 +35,7 @@ namespace SmallGreen.Desktop.Settings
             containerRegistry.RegisterForNavigation<ErrorMessageView, ErrorMessageViewModel>();
             containerRegistry.RegisterForNavigation<AssBucketEditDialog, AssBucketEditDialogViewModel>();
             containerRegistry.RegisterForNavigation<MixedComponentEditDialog, MixedComponentEditDialogViewModel>();
+            containerRegistry.RegisterForNavigation<MixedComponentsListDialog, MixedComponentsListDialogViewModel>();
 
             // 注册服务
             containerRegistry.Register<IDialogHostService, DialogHostService>();

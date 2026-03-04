@@ -27,9 +27,7 @@ namespace SmallGreen.Desktop.Settings.ViewModels
 
         public DelegateCommand RefreshCommand { get; }
         public DelegateCommand<AssBucketDto?> EditBucketCommand { get; }
-        public DelegateCommand<AssBucketDto?> AddComponentCommand { get; }
-        public DelegateCommand<MixedComponentDto?> EditComponentCommand { get; }
-        public DelegateCommand<MixedComponentDto?> DeleteComponentCommand { get; }
+        public DelegateCommand<AssBucketDto?> ViewComponentsCommand { get; }
 
         public AssBucketManagementViewModel(IContainerProvider container) : base(container)
         {
@@ -37,9 +35,7 @@ namespace SmallGreen.Desktop.Settings.ViewModels
 
             RefreshCommand = new DelegateCommand(async () => await LoadData());
             EditBucketCommand = new DelegateCommand<AssBucketDto?>(async b => await EditBucket(b));
-            AddComponentCommand = new DelegateCommand<AssBucketDto?>(async b => await AddComponent(b));
-            EditComponentCommand = new DelegateCommand<MixedComponentDto?>(async c => await EditComponent(c));
-            DeleteComponentCommand = new DelegateCommand<MixedComponentDto?>(async c => await DeleteComponent(c));
+            ViewComponentsCommand = new DelegateCommand<AssBucketDto?>(async b => await ViewComponents(b));
         }
 
         public override async void OnNavigatedTo(NavigationContext navigationContext)
@@ -86,65 +82,23 @@ namespace SmallGreen.Desktop.Settings.ViewModels
             }
         }
 
-        private async Task AddComponent(AssBucketDto? bucket)
+        private async Task ViewComponents(AssBucketDto? bucket)
         {
             if (bucket == null) return;
             if (!bucket.IsMixed)
             {
-                await ShowErrorMessage("该助剂桶不是混合助剂，无法添加组分");
+                await ShowErrorMessage("该助剂桶不是混合助剂");
                 return;
             }
 
             var param = new DialogParameters
             {
-                { "ParentId", bucket.Id },
-                { "IsNew", true }
+                { "Bucket", bucket }
             };
 
-            var dialogResult = await GetDialogHostService().ShowDialog(nameof(MixedComponentEditDialog), param);
+            await GetDialogHostService().ShowDialog(nameof(MixedComponentsListDialog), param);
 
-            if (dialogResult.Result == ButtonResult.OK)
-            {
-                await LoadData();
-            }
-        }
-
-        private async Task EditComponent(MixedComponentDto? component)
-        {
-            if (component == null) return;
-
-            var param = new DialogParameters
-            {
-                { "Component", component },
-                { "IsNew", false }
-            };
-
-            var dialogResult = await GetDialogHostService().ShowDialog(nameof(MixedComponentEditDialog), param);
-
-            if (dialogResult.Result == ButtonResult.OK)
-            {
-                await LoadData();
-            }
-        }
-
-        private async Task DeleteComponent(MixedComponentDto? component)
-        {
-            if (component == null) return;
-
-            var confirm = await ShowConfirmOperateView("确定要删除该混合组分吗？");
-            if (confirm == null || confirm.Result != ButtonResult.Yes) return;
-
-            Loading(true);
-            var result = await assBucketService.DeleteMixedComponent(component.Id);
-            Loading(false);
-
-            if (!result.IsSuccess)
-            {
-                await ShowErrorMessage(result.Message);
-                return;
-            }
-
-            await ShowSuccessMessage("删除成功");
+            // 刷新数据以获取最新的组分信息
             await LoadData();
         }
     }

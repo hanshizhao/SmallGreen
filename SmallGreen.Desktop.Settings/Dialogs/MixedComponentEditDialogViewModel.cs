@@ -18,7 +18,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
         private string? name;
         private double concentration;
         private double ratio;
-        private string title = "新增混合组分";
+        private string title = "新增混合助剂";
         private string? errorMessage;
 
         public string Title
@@ -88,7 +88,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
             if (parameters.TryGetValue("IsNew", out bool isNewValue))
             {
                 isNew = isNewValue;
-                Title = isNew ? "新增混合组分" : "编辑混合组分";
+                Title = isNew ? "新增混合助剂" : "编辑混合助剂";
             }
 
             // For new component
@@ -117,13 +117,13 @@ namespace SmallGreen.Desktop.Settings.Dialogs
         {
             if (string.IsNullOrWhiteSpace(CodeNumber))
             {
-                await ShowError("组分编号不能为空");
+                await ShowError("助剂编号不能为空");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(Name))
             {
-                await ShowError("组分名称不能为空");
+                await ShowError("助剂名称不能为空");
                 return;
             }
 

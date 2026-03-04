@@ -11,6 +11,11 @@ namespace SmallGreen.Desktop.Settings.IServices
         Task<ApiResponse<List<AssBucketDto>>> GetBuckets();
 
         /// <summary>
+        /// 根据ID获取助剂桶详情
+        /// </summary>
+        Task<ApiResponse<AssBucketDto>> GetBucketById(long id);
+
+        /// <summary>
         /// 更新助剂桶基本信息
         /// </summary>
         Task<ApiResponse<AssBucketDto>> UpdateBucket(UpdateAssBucketDto dto);

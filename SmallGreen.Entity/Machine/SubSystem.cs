@@ -3,6 +3,7 @@ using SmallGreen.Entity.Basic;
 using SmallGreen.Entity.Data;
 using SmallGreen.Entity.Interface;
 using SqlSugar;
+using Serilog;
 
 namespace SmallGreen.Entity.Machine
 {
@@ -296,6 +297,32 @@ namespace SmallGreen.Entity.Machine
 
             if (listDetail.Count < 1)
             {
+                // 诊断日志：记录原始数据以分析问题原因
+                var realLitreRaw = bulk.DataRealLitreArray?.GetCurrentValue() ?? "null";
+                var formulaRaw = bulk.DataFomulaArray?.GetCurrentValue() ?? "null";
+                var realLitreArrPreview = realLitreArr.Length > 0
+                    ? string.Join(", ", realLitreArr.Take(5).Select(v => v.ToString("F2"))) + (realLitreArr.Length > 5 ? "..." : "")
+                    : "(空数组)";
+                var formularArrPreview = formularArr.Length > 0
+                    ? string.Join(", ", formularArr.Take(5).Select(v => v.ToString("F2"))) + (formularArr.Length > 5 ? "..." : "")
+                    : "(空数组)";
+
+                Log.Warning(
+                    "[诊断日志] {EquipmentName}-{BulkCodeNumber} 检测不到助剂消耗量 | " +
+                    "DataRealLitreArray原始值: [{RealLitreRaw}] | " +
+                    "DataFomulaArray原始值: [{FormulaRaw}] | " +
+                    "realLitreArr解析结果: [{RealLitreArr}] (长度:{RealLen}) | " +
+                    "formularArr解析结果: [{FormulaArr}] (长度:{FormulaLen})",
+                    equipment.Name,
+                    bulk.CodeNumber,
+                    realLitreRaw,
+                    formulaRaw,
+                    realLitreArrPreview,
+                    realLitreArr.Length,
+                    formularArrPreview,
+                    formularArr.Length
+                );
+
                 return new OperateResult<PRCSData>
                 {
                     IsSuccess = false,
