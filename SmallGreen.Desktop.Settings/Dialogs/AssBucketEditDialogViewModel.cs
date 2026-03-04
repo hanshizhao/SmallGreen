@@ -16,6 +16,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
         private string? codeNumber;
         private string? name;
         private double concentration;
+        private double effectiveConcentration;
         private bool isMixed;
         private string? errorMessage;
 
@@ -47,6 +48,12 @@ namespace SmallGreen.Desktop.Settings.Dialogs
         {
             get => concentration;
             set => SetProperty(ref concentration, value);
+        }
+
+        public double EffectiveConcentration
+        {
+            get => effectiveConcentration;
+            set => SetProperty(ref effectiveConcentration, value);
         }
 
         public bool IsMixed
@@ -98,6 +105,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
                 CodeNumber = bucket.CodeNumber;
                 Name = bucket.Name;
                 Concentration = bucket.Concentration;
+                EffectiveConcentration = bucket.EffectiveConcentration;
                 IsMixed = bucket.IsMixed;
                 HasChanges = false;
             }
@@ -123,6 +131,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
                 CodeNumber = CodeNumber,
                 Name = Name,
                 Concentration = Concentration,
+                EffectiveConcentration = EffectiveConcentration,
                 IsMixed = IsMixed
             };
 

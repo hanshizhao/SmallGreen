@@ -167,31 +167,40 @@
                     <DataGridTextColumn Width="0.7*"
                                         Binding="{Binding AssCodeNumber}"
                                         Header="助剂编号" />
-                    <DataGridTextColumn Width="2*"
+                    <DataGridTextColumn Width="1.2*"
                                         Binding="{Binding AssName}"
                                         Header="助剂名称" />
                     <DataGridTextColumn Width="*"
-                                        Binding="{Binding GramsPerLiter}"
-                                        Header="每升含量&lt;g&gt;" />
+                                        Binding="{Binding GramsPerLiter, StringFormat={}{0:F2} g}"
+                                        Header="每升含量(PLC)" />
                     <DataGridTextColumn Width="*"
-                                        Binding="{Binding AssGl}"
-                                        Header="配方用量&lt;g/L&gt;" />
+                                        Binding="{Binding EffectiveGramsPerLiter, StringFormat={}{0:F2} g}"
+                                        Header="实际有效浓度" />
                     <DataGridTextColumn Width="*"
-                                        Binding="{Binding PlanVolumeWithWater}"
-                                        Header="计划消耗体积&lt;L&gt;" />
+                                        Binding="{Binding AssGl, StringFormat={}{0:F2} g/L}"
+                                        Header="配方用量" />
                     <DataGridTextColumn Width="*"
-                                        Binding="{Binding RealVolumeWithWater}"
+                                        Binding="{Binding PlanVolumeWithWater, StringFormat={}{0:F2} L}"
+                                        Header="计划消耗体积" />
+                    <DataGridTextColumn Width="*"
+                                        Binding="{Binding RealVolumeWithWater, StringFormat={}{0:F2} L}"
                                         FontWeight="Bold"
                                         Foreground="{StaticResource NormalBrush}"
-                                        Header="实际消耗体积&lt;L&gt;" />
+                                        Header="实际消耗体积" />
                     <DataGridTextColumn Width="*"
-                                        Binding="{Binding PlanKg}"
-                                        Header="计划消耗量&lt;Kg&gt;" />
+                                        Binding="{Binding PlanKg, StringFormat={}{0:F2} Kg}"
+                                        Header="计划消耗量" />
                     <DataGridTextColumn Width="*"
-                                        Binding="{Binding AssKg}"
+                                        Binding="{Binding AssKg, StringFormat={}{0:F2} Kg}"
                                         FontWeight="Bold"
                                         Foreground="{StaticResource NormalBrush}"
-                                        Header="实际消耗量&lt;Kg&gt;" />
+                                        Header="消耗量(含水)" />
+
+                    <DataGridTextColumn Width="*"
+                    Binding="{Binding EffectiveAssKg, StringFormat={}{0:F2} Kg}"
+                    FontWeight="Bold"
+                    Foreground="{StaticResource NormalBrush}"
+                    Header="消耗量(无水)" />
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>

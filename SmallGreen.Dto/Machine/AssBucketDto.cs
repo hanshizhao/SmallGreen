@@ -36,6 +36,11 @@ namespace SmallGreen.Dto.Machine
         public double Concentration { get; set; }
 
         /// <summary>
+        /// 实际有效浓度（g/L），用于财务消耗计算
+        /// </summary>
+        public double EffectiveConcentration { get; set; }
+
+        /// <summary>
         /// 最大容量（只读，固定1000L）
         /// </summary>
         public float MaxV { get; set; } = 1000f;

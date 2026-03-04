@@ -6,8 +6,8 @@
              xmlns:local="clr-namespace:SmallGreen.Desktop.Settings.Dialogs"
              xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d"
-             d:DesignHeight="450" d:DesignWidth="550"
-             MinWidth="550" MinHeight="350">
+             d:DesignHeight="450" d:DesignWidth="850"
+             MinWidth="850" MinHeight="350">
 
     <!-- 嵌套的 DialogHost 用于显示子对话框 -->
     <md:DialogHost Identifier="MixedComponentsListDialogHost">
@@ -50,23 +50,32 @@
                   ItemsSource="{Binding Components}"
                   SelectedItem="{Binding SelectedComponent}"
                   VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Auto"
                   MaxHeight="300">
 
             <DataGrid.Columns>
-                <DataGridTextColumn Width="100"
+                <DataGridTextColumn Width="*"
+                                    MinWidth="120"
                                     Binding="{Binding CodeNumber}"
                                     Header="助剂编号"/>
-                <DataGridTextColumn Width="150"
+                <DataGridTextColumn Width="1.5*"
+                                    MinWidth="180"
                                     Binding="{Binding Name}"
                                     Header="助剂名称"/>
-                <DataGridTextColumn Width="100"
+                <DataGridTextColumn Width="*"
+                                    MinWidth="120"
                                     Binding="{Binding Concentration, StringFormat={}{0:F2} g/L}"
                                     Header="助剂浓度"/>
-                <DataGridTextColumn Width="80"
-                                    Binding="{Binding Ratio, StringFormat={}{0:P2}}"
+                <DataGridTextColumn Width="*"
+                                    MinWidth="120"
+                                    Binding="{Binding EffectiveConcentration, StringFormat={}{0:F2} g/L}"
+                                    Header="有效浓度"/>
+                <DataGridTextColumn Width="*"
+                                    MinWidth="120"
+                                    Binding="{Binding Ratio}"
                                     Header="混合比例"/>
 
-                <DataGridTemplateColumn Width="140" Header="操作">
+                <DataGridTemplateColumn Width="2*" MinWidth="150" Header="操作">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">

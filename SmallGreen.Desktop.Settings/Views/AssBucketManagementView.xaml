@@ -68,6 +68,11 @@
                                     Binding="{Binding Concentration, StringFormat={}{0:F2} g/L}"
                                     Header="浓度"/>
 
+                <DataGridTextColumn Width="*"
+                    MinWidth="80"
+                    Binding="{Binding EffectiveConcentration, StringFormat={}{0:F2} g/L}"
+                    Header="有效浓度"/>
+
                 <!-- 最大容量 -->
                 <DataGridTextColumn Width="*"
                                     MinWidth="80"

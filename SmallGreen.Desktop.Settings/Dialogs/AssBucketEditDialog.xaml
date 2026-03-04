@@ -92,6 +92,17 @@
                          md:HintAssist.Hint="请输入浓度"/>
             </Grid>
 
+            <Grid Margin="0,0,0,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="有效浓度(g/L):" VerticalAlignment="Center"/>
+                <TextBox Grid.Column="1"
+                         Text="{Binding EffectiveConcentration, UpdateSourceTrigger=PropertyChanged}"
+                         md:HintAssist.Hint="每升母液实际含有的助剂质量"/>
+            </Grid>
+
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="100"/>

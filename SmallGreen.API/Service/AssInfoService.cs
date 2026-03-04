@@ -46,6 +46,7 @@ namespace SmallGreen.API.Service
                     CodeNumber = ass.CodeNumber,
                     Name = ass.Name,
                     Concentration = ass.Concentration,
+                    EffectiveConcentration = ass.EffectiveConcentration,
                     MaxV = ass.MaxV,
                     IsMixed = ass.IsMixed,
                     MixedComponents = ass.ListMixedDetail?.Select(m => new MixedComponentDto
@@ -55,6 +56,7 @@ namespace SmallGreen.API.Service
                         CodeNumber = m.CodeNumber,
                         Name = m.Name,
                         Concentration = m.Concentration,
+                        EffectiveConcentration = m.EffectiveConcentration,
                         Ratio = m.Ratio
                     }).ToList()
                 }).ToList();
@@ -106,6 +108,7 @@ namespace SmallGreen.API.Service
                         CodeNumber = ass.CodeNumber,
                         Name = ass.Name,
                         Concentration = ass.Concentration,
+                        EffectiveConcentration = ass.EffectiveConcentration,
                         MaxV = ass.MaxV,
                         IsMixed = ass.IsMixed,
                         MixedComponents = ass.ListMixedDetail?.Select(m => new MixedComponentDto
@@ -115,6 +118,7 @@ namespace SmallGreen.API.Service
                             CodeNumber = m.CodeNumber,
                             Name = m.Name,
                             Concentration = m.Concentration,
+                            EffectiveConcentration = m.EffectiveConcentration,
                             Ratio = m.Ratio
                         }).ToList()
                     }
@@ -152,6 +156,7 @@ namespace SmallGreen.API.Service
                 ass.CodeNumber = dto.CodeNumber;
                 ass.Name = dto.Name;
                 ass.Concentration = dto.Concentration;
+                ass.EffectiveConcentration = dto.EffectiveConcentration;
                 ass.IsMixed = dto.IsMixed;
 
                 var success = await repo.UpdateAsync(ass);
@@ -175,6 +180,7 @@ namespace SmallGreen.API.Service
                         CodeNumber = ass.CodeNumber,
                         Name = ass.Name,
                         Concentration = ass.Concentration,
+                        EffectiveConcentration = ass.EffectiveConcentration,
                         MaxV = ass.MaxV,
                         IsMixed = ass.IsMixed
                     }
@@ -224,6 +230,7 @@ namespace SmallGreen.API.Service
                     CodeNumber = dto.CodeNumber,
                     Name = dto.Name,
                     Concentration = dto.Concentration,
+                    EffectiveConcentration = dto.EffectiveConcentration,
                     Ratio = dto.Ratio
                 };
 
@@ -241,6 +248,7 @@ namespace SmallGreen.API.Service
                         CodeNumber = dto.CodeNumber,
                         Name = dto.Name,
                         Concentration = dto.Concentration,
+                        EffectiveConcentration = dto.EffectiveConcentration,
                         Ratio = dto.Ratio
                     }
                 };
@@ -276,6 +284,7 @@ namespace SmallGreen.API.Service
                 detail.CodeNumber = dto.CodeNumber;
                 detail.Name = dto.Name;
                 detail.Concentration = dto.Concentration;
+                detail.EffectiveConcentration = dto.EffectiveConcentration;
                 detail.Ratio = dto.Ratio;
 
                 var success = await repo.UpdateAsync(detail);
@@ -298,6 +307,7 @@ namespace SmallGreen.API.Service
                         CodeNumber = detail.CodeNumber,
                         Name = detail.Name,
                         Concentration = detail.Concentration,
+                        EffectiveConcentration = detail.EffectiveConcentration,
                         Ratio = detail.Ratio
                     }
                 };

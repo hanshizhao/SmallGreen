@@ -35,6 +35,13 @@ namespace SmallGreen.Dto.Machine
         public double Concentration { get; set; }
 
         /// <summary>
+        /// 实际有效浓度（g/L），用于财务消耗计算
+        /// </summary>
+        [Required]
+        [Range(0, double.MaxValue)]
+        public double EffectiveConcentration { get; set; }
+
+        /// <summary>
         /// 是否混合助剂
         /// </summary>
         public bool IsMixed { get; set; }

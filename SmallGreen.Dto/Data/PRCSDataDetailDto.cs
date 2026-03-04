@@ -14,5 +14,15 @@
         public double RealVolumeWithWater { get; set; }
         public double PlanKg { get; set; }
         public double AssKg { get; set; }
+
+        /// <summary>
+        /// 实际有效浓度（g/L）
+        /// </summary>
+        public double EffectiveGramsPerLiter { get; set; }
+
+        /// <summary>
+        /// 财务消耗量（kg）
+        /// </summary>
+        public double EffectiveAssKg { get; set; }
     }
 }

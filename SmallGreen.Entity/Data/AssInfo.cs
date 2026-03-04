@@ -45,6 +45,11 @@ namespace SmallGreen.Entity.Data
         public double Concentration { get; set; }
 
         /// <summary>
+        /// 实际有效浓度（g/L），每升母液真正含有的助剂质量，用于财务消耗计算
+        /// </summary>
+        public double EffectiveConcentration { get; set; }
+
+        /// <summary>
         /// 是否是混合助剂
         /// </summary>
         public bool IsMixed { get; set; }

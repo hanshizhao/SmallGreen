@@ -29,6 +29,11 @@
         public double Concentration { get; set; }
 
         /// <summary>
+        /// 实际有效浓度（g/L），用于财务消耗计算
+        /// </summary>
+        public double EffectiveConcentration { get; set; }
+
+        /// <summary>
         /// 混合比例
         /// </summary>
         public double Ratio { get; set; }

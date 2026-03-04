@@ -17,6 +17,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
         private string? codeNumber;
         private string? name;
         private double concentration;
+        private double effectiveConcentration;
         private double ratio;
         private string title = "新增混合助剂";
         private string? errorMessage;
@@ -55,6 +56,12 @@ namespace SmallGreen.Desktop.Settings.Dialogs
         {
             get => concentration;
             set => SetProperty(ref concentration, value);
+        }
+
+        public double EffectiveConcentration
+        {
+            get => effectiveConcentration;
+            set => SetProperty(ref effectiveConcentration, value);
         }
 
         public double Ratio
@@ -98,6 +105,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
                 CodeNumber = string.Empty;
                 Name = string.Empty;
                 Concentration = 0;
+                EffectiveConcentration = 0;
                 Ratio = 1;
             }
 
@@ -109,6 +117,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
                 CodeNumber = component.CodeNumber;
                 Name = component.Name;
                 Concentration = component.Concentration;
+                EffectiveConcentration = component.EffectiveConcentration;
                 Ratio = component.Ratio;
             }
         }
@@ -143,6 +152,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
                     CodeNumber = CodeNumber,
                     Name = Name,
                     Concentration = Concentration,
+                    EffectiveConcentration = EffectiveConcentration,
                     Ratio = Ratio
                 };
                 result = await assBucketService.CreateMixedComponent(dto);
@@ -155,6 +165,7 @@ namespace SmallGreen.Desktop.Settings.Dialogs
                     CodeNumber = CodeNumber,
                     Name = Name,
                     Concentration = Concentration,
+                    EffectiveConcentration = EffectiveConcentration,
                     Ratio = Ratio
                 };
                 result = await assBucketService.UpdateMixedComponent(dto);

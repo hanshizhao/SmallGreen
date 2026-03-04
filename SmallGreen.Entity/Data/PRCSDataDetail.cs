@@ -70,6 +70,16 @@ namespace SmallGreen.Entity.Data
         /// </summary>
         public double AssKg { get; set; }
 
+        /// <summary>
+        /// 实际有效浓度（g/L）
+        /// </summary>
+        public double EffectiveGramsPerLiter { get; set; }
+
+        /// <summary>
+        /// 财务消耗量（kg），基于实际有效浓度计算
+        /// </summary>
+        public double EffectiveAssKg { get; set; }
+
 
         public PRCSDataDetailDto ToDto()
         {
@@ -81,10 +91,12 @@ namespace SmallGreen.Entity.Data
                 AssGl = AssGl,
                 AssId = AssId,
                 AssKg = AssKg,
+                EffectiveAssKg = EffectiveAssKg,
                 AssName = AssName,
                 ParentId = ParentId,
                 PlanKg = PlanKg,
                 GramsPerLiter = GramsPerLiter,
+                EffectiveGramsPerLiter = EffectiveGramsPerLiter,
                 PlanVolumeWithWater = PlanVolumeWithWater,
                 RealVolumeWithWater = RealVolumeWithWater
             };

@@ -245,6 +245,7 @@ namespace SmallGreen.Entity.Machine
                         var curRatio = it.Ratio / sumRatio;  // 当前助剂的混合占比
 
                         var assKg = (realLitre * it.Concentration * curRatio) / 1000d; // 混合助剂的实际质量
+                        var effectiveAssKg = (realLitre * it.EffectiveConcentration * curRatio) / 1000d; // 财务消耗量
                         var planKg = (prcsData.PlanVolume * formular * curRatio) / 1000d; // 混合助剂的计划质量
                         var planVolumeWithWater = (prcsData.PlanVolume * formular * curRatio) / it.Concentration; // 混合助剂的计划体积
                         var p = new PRCSDataDetail
@@ -255,8 +256,10 @@ namespace SmallGreen.Entity.Machine
                             AssGl = formular,
                             AssSequence = sequence,
                             AssKg = assKg,
+                            EffectiveAssKg = effectiveAssKg,
                             PlanKg = planKg,
                             GramsPerLiter = it.Concentration,
+                            EffectiveGramsPerLiter = it.EffectiveConcentration,
                             PlanVolumeWithWater = planVolumeWithWater,
                             RealVolumeWithWater = realLitre
                         };
@@ -281,10 +284,12 @@ namespace SmallGreen.Entity.Machine
                         AssId = ass.Id,
                         AssSequence = sequence,
                         AssKg = (realLitre * ass.Concentration) / 1000d,
+                        EffectiveAssKg = (realLitre * ass.EffectiveConcentration) / 1000d,
                         AssName = ass.Name,
                         AssCodeNumber = ass.CodeNumber,
                         PlanKg = (prcsData.PlanVolume * formular) / 1000d,
                         GramsPerLiter = ass.Concentration,
+                        EffectiveGramsPerLiter = ass.EffectiveConcentration,
                         PlanVolumeWithWater = (prcsData.PlanVolume * formular) / ass.Concentration,
                         RealVolumeWithWater = realLitre
                     };
