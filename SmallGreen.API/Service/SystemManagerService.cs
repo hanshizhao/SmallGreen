@@ -148,17 +148,20 @@ namespace SmallGreen.API.Service
 
         public Task EquipmentPageChanged()
         {
-            throw new NotImplementedException();
+            // 已在 CheckRuntime 中通过 HandleEquipmentPageChanged 实现
+            return Task.CompletedTask;
         }
 
         public Task CheckOrderStatus()
         {
-            throw new NotImplementedException();
+            // 已在 CheckRuntime 中通过 HandleOrderStatusChange 实现
+            return Task.CompletedTask;
         }
 
         public Task CheckStartWork()
         {
-            throw new NotImplementedException("Task 8 将实现");
+            // 已在 CheckRuntime 中通过 HandleStartWork 实现
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -475,9 +478,92 @@ namespace SmallGreen.API.Service
             return result;
         }
 
-        private Task HandleOrderStatusChange(SubSystem subSystem, Equipment equip)
+        /// <summary>
+        /// 处理订单完成/暂停/取消
+        /// </summary>
+        private async Task HandleOrderStatusChange(SubSystem subSystem, Equipment equip)
         {
-            throw new NotImplementedException("Task 9 将实现");
+            try
+            {
+                var finishedType = equip.DataFinishedType?.GetCurrentValue() ?? 0;
+
+                // 更新 T_EquipStartFinishStatus
+                try
+                {
+                    erpDbHelper.UpdateByProcedure("UpdateEquipFinishStatus", new SqlParameter[]
+                    {
+                        new("@equipID", equip.Id),
+                        new("@equipName", equip.Name),
+                        new("@finishType", finishedType),
+                        new("@finishDateTime", DateTime.Now)
+                    });
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "{equipName} 更新完成状态表失败", equip.Name);
+                }
+
+                // 如果是手动模式（无 uGuid），跳过 ERP 通知
+                if (string.IsNullOrEmpty(equip.uGuid) || equip.uGuid == "手动模式")
+                {
+                    equip.uGuid = string.Empty;
+                    await ResetTriggerFinished(subSystem, equip);
+                    return;
+                }
+
+                // 调用 ERP 存储过程
+                try
+                {
+                    if (finishedType == 3)
+                    {
+                        // 取消
+                        erpDbHelper.UpdateByProcedure("Cancel", new SqlParameter[]
+                        {
+                            new("@uGUID", equip.uGuid),
+                            new("@index", 0),
+                            new("@sysID", ""),
+                            new("@equipName", equip.Name),
+                            new("@equipID", equip.Id)
+                        });
+                    }
+                    else
+                    {
+                        // 完成(1) 或 暂停(2)
+                        var status = finishedType == 1 ? "完成" : "暂停";
+                        erpDbHelper.UpdateByProcedure("Finish", new SqlParameter[]
+                        {
+                            new("@uGUID", equip.uGuid),
+                            new("@equipName", equip.Name),
+                            new("@status", status),
+                            new("@equipID", equip.Id),
+                            new("@sysID", "")
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "{equipName} 调用ERP订单状态存储过程失败", equip.Name);
+                }
+
+                equip.uGuid = string.Empty;
+                await ResetTriggerFinished(subSystem, equip);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "{equipName} 订单状态回调异常：{message}", equip.Name, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 重置订单完成触发器
+        /// </summary>
+        private async Task ResetTriggerFinished(SubSystem subSystem, Equipment equip)
+        {
+            if (equip.TriggerFinished != null)
+            {
+                equip.TriggerFinished.NewValue = false;
+                await subSystem.PLC.Write([equip.TriggerFinished]);
+            }
         }
 
         public ISubSystem? GetSubSystem(SubSystemName subSystemName)
