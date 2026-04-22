@@ -15,6 +15,17 @@ namespace SmallGreen.API.Service
         private readonly ErpDbHelper erpDbHelper;
         private List<SubSystem> ListSubSystem;
 
+        /// <summary>
+        /// ERP 处方数据模型（对应存储过程返回的行）
+        /// </summary>
+        private class RealFomula
+        {
+            public int BulkID { get; set; }
+            public string No { get; set; } = "";
+            public float GL { get; set; }
+            public string uGUID { get; set; } = "";
+        }
+
         public SystemManagerService(ILogger<SystemManagerService> logger, ErpDbHelper erpDbHelper)
         {
             ListSubSystem = new List<SubSystem>();
@@ -230,9 +241,238 @@ namespace SmallGreen.API.Service
             }
         }
 
-        private Task HandleStartWork(SubSystem subSystem, Equipment equip)
+        /// <summary>
+        /// 处理开始生产 — 获取处方并下发到PLC
+        /// </summary>
+        private async Task HandleStartWork(SubSystem subSystem, Equipment equip)
         {
-            throw new NotImplementedException("Task 8 将实现");
+            try
+            {
+                var workInfoArray = equip.DataWorkOrderInfoArray?.GetCurrentValue() ?? "";
+
+                // 验证字符串长度
+                if (string.IsNullOrEmpty(workInfoArray) || workInfoArray.Length < 44)
+                {
+                    await SetFomulaQueryStatus(subSystem, equip, 2, "生产信息字符串长度不足");
+                    return;
+                }
+
+                // 解析69位字符串（44位有效 + 25位保留）
+                var jobGroupOrderNo = workInfoArray.Substring(0, 5).TrimEnd();
+                var orderNo = workInfoArray.Substring(5, 11).TrimEnd();
+                var prescriptionNo = workInfoArray.Substring(16, 6).TrimEnd();
+                var component = workInfoArray.Substring(22, 11).TrimEnd();
+                var unionQty = workInfoArray.Substring(33, 11).TrimEnd();
+
+                var equipType = subSystem.GetEquipType();
+                var equipName = equip.Name;
+                var dashIndex = equipName.IndexOf('-');
+                if (dashIndex > 0) equipName = equipName[..dashIndex];
+
+                // 调用存储过程查询处方
+                var paras = new SqlParameter[]
+                {
+                    new("@jobGroupOrderNo", jobGroupOrderNo),
+                    new("@orderNo", orderNo),
+                    new("@component", component),
+                    new("@unionQty", unionQty),
+                    new("@prescriptionNo", prescriptionNo),
+                    new("@equipName", equipName),
+                    new("@stepNo", equip.StepNo),
+                    new("@equipID", equip.Id),
+                    new("@paraEquipType", equipType)
+                };
+
+                var dt = erpDbHelper.RunProcedure("PROC_QueryFomulaByEquipWorkInfo", paras);
+
+                if (dt.Rows.Count == 0)
+                {
+                    await SetFomulaQueryStatus(subSystem, equip, 2, "存储过程未返回处方数据");
+                    return;
+                }
+
+                // 解析处方数据
+                var listFomula = new List<RealFomula>();
+                foreach (DataRow row in dt.Rows)
+                {
+                    listFomula.Add(new RealFomula
+                    {
+                        BulkID = Convert.ToInt32(row["BulkID"]),
+                        No = row["No"].ToString() ?? "",
+                        GL = Convert.ToSingle(row["GL"]),
+                        uGUID = row["uGUID"].ToString() ?? ""
+                    });
+                }
+
+                // 按设备类型解析配方
+                float[] fomulaValues;
+                if (equipType == 0)
+                {
+                    fomulaValues = GetQCLFomular(listFomula);
+                }
+                else
+                {
+                    fomulaValues = GetGSFomular(listFomula);
+                }
+
+                // 编码为 A 分隔字符串
+                var fomulaString = SubSystem.EncodeFomulaArray(fomulaValues);
+
+                // 写入所有配液缸的 DataFomulaArray
+                var domsToWrite = new List<IDom>();
+                foreach (var bulk in equip.ListBulk)
+                {
+                    if (bulk.DataFomulaArray != null)
+                    {
+                        bulk.DataFomulaArray.NewValue = fomulaString;
+                        domsToWrite.Add(bulk.DataFomulaArray);
+                    }
+                }
+
+                if (domsToWrite.Count > 0)
+                {
+                    var writeResult = await subSystem.PLC.Write(domsToWrite);
+                    if (!writeResult.IsSuccess)
+                    {
+                        await SetFomulaQueryStatus(subSystem, equip, 2, $"写入PLC失败:{writeResult.Message}");
+                        return;
+                    }
+                }
+
+                // 保存 uGuid（用于后续订单状态回调和用量回写）
+                equip.uGuid = listFomula[0].uGUID;
+
+                // 设置处方下发成功
+                await SetFomulaQueryStatus(subSystem, equip, 1, "");
+
+                // 调用 Cache 存储过程更新订单状态为"生产中"
+                try
+                {
+                    erpDbHelper.UpdateByProcedure("Cache", new SqlParameter[]
+                    {
+                        new("@uGUID", equip.uGuid),
+                        new("@workStatus", "生产中"),
+                        new("@sysID", ""),
+                        new("@equipName", equip.Name),
+                        new("@equipID", equip.Id)
+                    });
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "{equipName} 调用Cache存储过程失败", equip.Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "{equipName} 处方下发出现异常：{message}", equip.Name, ex.Message);
+                await SetFomulaQueryStatus(subSystem, equip, 2, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 设置处方下发状态并重置 BtnStart
+        /// </summary>
+        private async Task SetFomulaQueryStatus(SubSystem subSystem, Equipment equip, ushort status, string errorMessage)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    logger.LogError("{equipName} 处方下发失败：{error}", equip.Name, errorMessage);
+                }
+
+                if (equip.DataFomulaQueryStatus != null)
+                {
+                    equip.DataFomulaQueryStatus.NewValue = status;
+                    await subSystem.PLC.Write([equip.DataFomulaQueryStatus]);
+                }
+
+                // 重置 BtnStart
+                if (equip.BtnStart != null)
+                {
+                    equip.BtnStart.NewValue = false;
+                    await subSystem.PLC.Write([equip.BtnStart]);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "{equipName} 设置处方状态失败", equip.Name);
+            }
+        }
+
+        /// <summary>
+        /// 前处理配方解析 — 11种助剂映射到桶号1-11
+        /// </summary>
+        private float[] GetQCLFomular(List<RealFomula> list)
+        {
+            var result = new float[11];
+
+            // 先处理组合助剂
+            var item8110 = list.Find(x => x.No == "8110");
+            var item8103 = list.Find(x => x.No == "8103");
+            var item8109 = list.Find(x => x.No == "8109");
+
+            // 8110+8103 组合为10#桶，比例15:1
+            if (item8110 != null && item8103 != null)
+            {
+                var ratio = item8110.GL / (item8103.GL > 0 ? item8103.GL : 1);
+                if (Math.Abs(ratio - 15) > 0.1f)
+                {
+                    logger.LogWarning("前处理组合助剂8110+8103比例异常：{ratio}", ratio);
+                }
+                result[9] = item8110.GL + item8103.GL;
+            }
+
+            // 8109+8103 组合为7#桶，比例10:1
+            if (item8109 != null && item8103 != null)
+            {
+                var ratio = item8109.GL / (item8103.GL > 0 ? item8103.GL : 1);
+                if (Math.Abs(ratio - 10) > 0.1f)
+                {
+                    logger.LogWarning("前处理组合助剂8109+8103比例异常：{ratio}", ratio);
+                }
+                result[6] = item8109.GL + item8103.GL;
+            }
+
+            var combinedNos = new HashSet<string> { "8110", "8103", "8109" };
+
+            foreach (var item in list)
+            {
+                if (combinedNos.Contains(item.No)) continue;
+                if (item.BulkID >= 1 && item.BulkID <= 11)
+                {
+                    result[item.BulkID - 1] += item.GL;
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 固色配方解析 — 3种助剂映射到桶号12-14
+        /// </summary>
+        private float[] GetGSFomular(List<RealFomula> list)
+        {
+            var result = new float[3];
+
+            foreach (var item in list)
+            {
+                if (item.BulkID >= 12 && item.BulkID <= 14)
+                {
+                    result[item.BulkID - 12] += item.GL;
+                }
+                else if (item.BulkID == 0)
+                {
+                    result[1] += item.GL;
+                }
+            }
+
+            if (result[0] > 0 && result[1] > 0 && result[0] / result[1] > 10)
+            {
+                logger.LogWarning("固色配方异常：元明粉与纯碱用量比值超过10:1");
+            }
+
+            return result;
         }
 
         private Task HandleOrderStatusChange(SubSystem subSystem, Equipment equip)
