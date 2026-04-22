@@ -29,6 +29,17 @@ namespace SmallGreen.Entity.Machine
         public string Name { get; set; } = null!;
 
         /// <summary>
+        /// 工步号（用于存储过程参数）
+        /// </summary>
+        public int StepNo { get; set; } = 1;
+
+        /// <summary>
+        /// 当前生产订单的GUID（运行时设置，不持久化）
+        /// </summary>
+        [SugarColumn(IsIgnore = true)]
+        public string uGuid { get; set; } = string.Empty;
+
+        /// <summary>
         /// 配液缸组
         /// </summary>
         [Navigate(NavigateType.OneToMany, nameof(Bulk.EquipmentId))]
