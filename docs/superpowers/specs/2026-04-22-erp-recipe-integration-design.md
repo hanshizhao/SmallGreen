@@ -83,6 +83,7 @@
 | 16~21 | 6位 | 处方号 prescriptionNo |
 | 22~32 | 11位 | 成份 component |
 | 33~43 | 11位 | 排机数量 unionQty |
+| 44~68 | 25位 | 保留位（PLC 固定长度填充，不解析） |
 
 **流程：**
 1. 解析69位字符串
@@ -149,18 +150,66 @@
 
 ## ErpDbHelper 设计
 
+非静态类，通过 DI 注入 `IConfiguration` 获取连接字符串。在 `Program.cs` 中注册为 Singleton。
+
 ```csharp
 public class ErpDbHelper
 {
-    // 从 IConfiguration 读取中间库连接字符串
-    static string ConnectionString;
+    private readonly string _connectionString;
+
+    public ErpDbHelper(IConfiguration configuration)
+    {
+        _connectionString = configuration["ErpDbConnection"]
+            ?? throw new InvalidOperationException("ErpDbConnection 未配置");
+    }
 
     // 执行查询类存储过程，返回 DataTable
-    public static DataTable RunProcedure(string procName, SqlParameter[] parameters);
+    public DataTable RunProcedure(string procName, SqlParameter[] parameters);
 
     // 执行更新类存储过程，返回影响行数
-    public static int UpdateByProcedure(string procName, SqlParameter[] parameters);
+    public int UpdateByProcedure(string procName, SqlParameter[] parameters);
 }
+```
+
+`SystemManagerService` 通过构造函数注入 `ErpDbHelper`。
+
+## 设备类型映射
+
+`Equipment` 没有独立的 `equipType` 属性，通过所属 `SubSystem.SubSystemName` 枚举映射：
+- `SubSystemName.QCL1` / `QCL2` → 前处理（equipType=0）
+- `SubSystemName.GS1` → 固色（equipType=1）
+
+存储过程参数映射：
+- `@equipName` → `Equipment.Name`
+- `@equipID` → `Equipment.Id`（SmallGreen 系统雪花 ID）
+- `@paraEquipType` → 由 `SubSystemName` 枚举转换
+
+## 接口扩展
+
+在 `ISystemManagerService` 接口新增：
+```csharp
+void CheckStartWork(Equipment equipment);
+```
+
+`EquipmentPageChanged` 和 `CheckOrderStatus` 已在接口中声明，仅需补全实现。
+
+## 订单状态回调数据表
+
+`T_Residue` 和 `T_EquipStartFinishStatus` 为 ERP 中间库已有的表（与老项目共用同一数据库），无需在 SmallGreenDB 中创建新实体。功能3仅通过 `ErpDbHelper` 调用存储过程操作这两张表，不涉及 SqlSugar ORM。
+
+## 组合助剂逻辑
+
+处方解析（`GetQCLFomular`/`GetGSFomular`）从 ERP 存储过程返回的 `RealFomula` 列表（字段：BulkID, No, GL, uGUID）中识别组合助剂。此逻辑与现有 `AssInfo.IsMixed` + `MixedDetail` 模型互补：
+- **处方解析阶段**（新增逻辑）：将 ERP 返回的原始助剂编号（如 8110、8103）按硬编码规则组合并映射到桶号
+- **用量分配阶段**（已有逻辑）：在 `SavePRCSData` 中使用 `AssInfo.IsMixed` + `MixedDetail.Ratio` 按比例分配实际用量
+
+两阶段使用不同模型是合理的：处方解析是 ERP 数据 → 桶号的映射（依赖固定的工艺配方），用量分配是桶 → 各组分的分配（依赖动态配置的混合比例）。
+
+## 链接服务器配置
+
+存储过程内部通过链接服务器查询 ERP 视图。链接服务器名称需根据实际环境配置，在部署时确认。典型格式：
+```sql
+SELECT * FROM [LinkedServerName].[hsdyeingerp].[dbo].[vwpsWppDataFT]
 ```
 
 ## 存储过程清单
@@ -174,7 +223,9 @@ public class ErpDbHelper
 | `Cache` | 更新 | 更新订单状态为"生产中" |
 | `Cancel` | 更新 | 通知 ERP 订单取消 |
 | `Finish` | 更新 | 通知 ERP 订单完成/暂停 |
-| 用量回写存储过程 | 更新 | 将实际助剂用量回写 ERP |
+| 用量回写存储过程 | 更新 | 将实际助剂用量回写 ERP（名称待确认，可能复用老项目的 `spmmDCOutWeighingSaveDelayFT` 或新建） |
+
+**注意：** 用量回写存储过程需在部署时与 ERP 管理员确认具体名称和参数。
 
 ## 后台轮询扩展
 
@@ -200,7 +251,10 @@ public class ErpDbHelper
 ## 风险与注意事项
 
 1. **组合助剂逻辑复杂**：前处理的组合助剂验证（比例误差不超过0.1）需精确移植，建议单元测试覆盖
-2. **69位字符串解析**：固定位置截取，需严格对照老项目偏移量
-3. **PLC 字符串编码**：`A` 分隔符格式和 `0000.00` 补零格式需与 PLC 端一致
-4. **双氧水特殊处理**：除以0.275浓度是物理特性，必须保留
-5. **存储过程创建**：需根据实际 ERP 视图结构调整存储过程 SQL
+2. **69位字符串解析**：固定位置截取（44位有效 + 25位保留），需严格对照老项目偏移量
+3. **PLC 字符串编码**：`A` 分隔符格式和 `0000.00` 补零格式需与 PLC 端一致，最大值 `9999.99`
+4. **双氧水特殊处理**：0.275 是双氧水在配方解析阶段的固定换算系数（与 `AssInfo.Concentration` 字段无关，后者用于用量计算阶段）
+5. **存储过程创建**：需根据实际 ERP 视图结构调整存储过程 SQL，链接服务器名称需部署时确认
+6. **连接安全**：生产环境的 `ErpDbConnection` 连接字符串应使用环境变量或 Secret Manager，不应明文存储
+7. **轮询超时**：ERP 中间库的存储过程通过链接服务器查询远程 ERP，若响应超过2秒轮询周期，需考虑加锁避免并发执行
+8. **错误处理**：存储过程执行失败时应记录日志并跳过本次轮询，不阻塞后续触发器检查
