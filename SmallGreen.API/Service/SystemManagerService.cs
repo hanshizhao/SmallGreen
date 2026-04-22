@@ -1,4 +1,6 @@
-﻿using SmallGreen.API.IService;
+﻿using System.Data;
+using Microsoft.Data.SqlClient;
+using SmallGreen.API.IService;
 using SmallGreen.Common;
 using SmallGreen.Entity;
 using SmallGreen.Entity.Basic;
@@ -10,12 +12,14 @@ namespace SmallGreen.API.Service
     public class SystemManagerService : ISystemManagerService
     {
         private readonly ILogger<SystemManagerService> logger;
+        private readonly ErpDbHelper erpDbHelper;
         private List<SubSystem> ListSubSystem;
 
-        public SystemManagerService(ILogger<SystemManagerService> logger)
+        public SystemManagerService(ILogger<SystemManagerService> logger, ErpDbHelper erpDbHelper)
         {
             ListSubSystem = new List<SubSystem>();
             this.logger = logger;
+            this.erpDbHelper = erpDbHelper;
         }
 
         public async Task<OperateResult> Init()
@@ -74,10 +78,35 @@ namespace SmallGreen.API.Service
                 foreach (var subSystem in ListSubSystem)
                 {
                     subSystemName = subSystem.SubSystemName.ToString();
-                    // 检查各个点位触发器
                     var result = await subSystem.CheckRuntimeOnlyTrigger();
 
-                    if (!result.IsSuccess) logger.LogError("{subSystemName}检查运行时出现故障：{Message}", subSystem.SubSystemName, result.Message);
+                    if (!result.IsSuccess)
+                    {
+                        logger.LogError("{subSystemName}检查运行时出现故障：{Message}", subSystem.SubSystemName, result.Message);
+                        continue;
+                    }
+
+                    // 检查各机台的触发器
+                    foreach (var equip in subSystem.ListEquipment)
+                    {
+                        // 翻页触发
+                        if (equip.BtnPageChange?.GetCurrentValue() == true)
+                        {
+                            await HandleEquipmentPageChanged(subSystem, equip);
+                        }
+
+                        // 开始生产触发
+                        if (equip.BtnStart?.GetCurrentValue() == true)
+                        {
+                            await HandleStartWork(subSystem, equip);
+                        }
+
+                        // 订单完成触发
+                        if (equip.TriggerFinished?.GetCurrentValue() == true)
+                        {
+                            await HandleOrderStatusChange(subSystem, equip);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -114,6 +143,26 @@ namespace SmallGreen.API.Service
         public Task CheckOrderStatus()
         {
             throw new NotImplementedException();
+        }
+
+        public Task CheckStartWork()
+        {
+            throw new NotImplementedException("Task 8 将实现");
+        }
+
+        private Task HandleEquipmentPageChanged(SubSystem subSystem, Equipment equip)
+        {
+            throw new NotImplementedException("Task 7 将实现");
+        }
+
+        private Task HandleStartWork(SubSystem subSystem, Equipment equip)
+        {
+            throw new NotImplementedException("Task 8 将实现");
+        }
+
+        private Task HandleOrderStatusChange(SubSystem subSystem, Equipment equip)
+        {
+            throw new NotImplementedException("Task 9 将实现");
         }
 
         public ISubSystem? GetSubSystem(SubSystemName subSystemName)
