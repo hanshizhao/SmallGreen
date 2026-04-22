@@ -150,9 +150,84 @@ namespace SmallGreen.API.Service
             throw new NotImplementedException("Task 8 将实现");
         }
 
-        private Task HandleEquipmentPageChanged(SubSystem subSystem, Equipment equip)
+        /// <summary>
+        /// 处理机台翻页请求
+        /// </summary>
+        private async Task HandleEquipmentPageChanged(SubSystem subSystem, Equipment equip)
         {
-            throw new NotImplementedException("Task 7 将实现");
+            try
+            {
+                var currentPage = equip.DataCurrentPage?.GetCurrentValue() ?? 1;
+                var equipType = subSystem.GetEquipType();
+                var equipName = equip.Name;
+
+                // 老项目中会截取 '-' 之前的部分作为机台名
+                var dashIndex = equipName.IndexOf('-');
+                if (dashIndex > 0) equipName = equipName[..dashIndex];
+
+                var paras = new SqlParameter[]
+                {
+                    new("@currentPageNum", currentPage),
+                    new("@equipName", equipName),
+                    new("@MaxPerPage", 5),
+                    new("@equipType", equipType)
+                };
+
+                var dt = erpDbHelper.RunProcedure("PROC_OrderInfoPageQueryByEquipName", paras);
+
+                var lineStatuses = new[] { equip.Line1Status, equip.Line2Status, equip.Line3Status, equip.Line4Status, equip.Line5Status };
+                var lineColorIDs = new[] { equip.Line1ColorID, equip.Line2ColorID, equip.Line3ColorID, equip.Line4ColorID, equip.Line5ColorID };
+                var lineWorkInfos = new[] { equip.Line1WrokInfoArray, equip.Line2WrokInfoArray, equip.Line3WrokInfoArray, equip.Line4WrokInfoArray, equip.Line5WrokInfoArray };
+
+                // 先清空5行数据
+                var domsToWrite = new List<IDom>();
+                for (int i = 0; i < 5; i++)
+                {
+                    if (lineStatuses[i] != null) { lineStatuses[i].NewValue = (ushort)0; domsToWrite.Add(lineStatuses[i]); }
+                    if (lineColorIDs[i] != null) { lineColorIDs[i].NewValue = (ushort)0; domsToWrite.Add(lineColorIDs[i]); }
+                    if (lineWorkInfos[i] != null) { lineWorkInfos[i].NewValue = string.Empty; domsToWrite.Add(lineWorkInfos[i]); }
+                }
+
+                // 写入查询到的订单数据
+                for (int i = 0; i < dt.Rows.Count && i < 5; i++)
+                {
+                    var row = dt.Rows[i];
+                    if (lineStatuses[i] != null && row["iStatus"] != DBNull.Value)
+                        lineStatuses[i].NewValue = Convert.ToUInt16(row["iStatus"]);
+                    if (lineColorIDs[i] != null && row["iColorID"] != DBNull.Value)
+                        lineColorIDs[i].NewValue = Convert.ToUInt16(row["iColorID"]);
+                    if (lineWorkInfos[i] != null && row["sWorkInfoArray"] != DBNull.Value)
+                        lineWorkInfos[i].NewValue = row["sWorkInfoArray"].ToString();
+                }
+
+                // 写入总页数
+                if (dt.Rows.Count > 0 && equip.DataTotalPage != null)
+                {
+                    var totalPage = dt.Rows[0]["iTotalPageCount"];
+                    if (totalPage != DBNull.Value)
+                    {
+                        equip.DataTotalPage.NewValue = Convert.ToUInt16(totalPage);
+                        domsToWrite.Add(equip.DataTotalPage);
+                    }
+                }
+
+                // 批量写入 PLC
+                if (domsToWrite.Count > 0)
+                {
+                    await subSystem.PLC.Write(domsToWrite);
+                }
+
+                // 重置翻页按钮
+                if (equip.BtnPageChange != null)
+                {
+                    equip.BtnPageChange.NewValue = false;
+                    await subSystem.PLC.Write([equip.BtnPageChange]);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "{equipName} 翻页查询出现异常：{message}", equip.Name, ex.Message);
+            }
         }
 
         private Task HandleStartWork(SubSystem subSystem, Equipment equip)
