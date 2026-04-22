@@ -37,6 +37,11 @@ namespace SmallGreen.API.IService
         Task CheckOrderStatus();
 
         /// <summary>
+        /// 检查开始生产触发器，获取处方并下发
+        /// </summary>
+        Task CheckStartWork();
+
+        /// <summary>
         /// 根据子系统名称获取子系统
         /// </summary>
         /// <param name="subSystemName"></param>
