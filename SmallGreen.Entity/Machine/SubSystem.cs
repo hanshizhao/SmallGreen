@@ -384,6 +384,27 @@ namespace SmallGreen.Entity.Machine
             return result;
         }
 
+        /// <summary>
+        /// 获取设备类型：0=前处理，1=固色
+        /// </summary>
+        public int GetEquipType()
+        {
+            return SubSystemName == SubSystemName.GS1 ? 1 : 0;
+        }
+
+        /// <summary>
+        /// 将配方值数组编码为 PLC 字符串格式（A 分隔，每值7位 0000.00）
+        /// </summary>
+        public static string EncodeFomulaArray(float[] values)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var val in values)
+            {
+                sb.Append(val.ToString("0000.00", System.Globalization.CultureInfo.InvariantCulture));
+                sb.Append('A');
+            }
+            return sb.ToString();
+        }
 
     }
 }
