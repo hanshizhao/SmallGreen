@@ -6,7 +6,9 @@
 
 **Architecture:** 在现有 SystemManagerService 2秒轮询机制基础上，扩展触发器检查逻辑，通过新增的 ErpDbHelper（ADO.NET）调用 ERP 中间库存储过程，与 PLC 进行双向数据交互。
 
-**Tech Stack:** .NET 8, SqlSugar, S7.NET, ADO.NET (System.Data.SqlClient), SQL Server 存储过程
+**Tech Stack:** .NET 8, SqlSugar, S7.NET, ADO.NET (Microsoft.Data.SqlClient), SQL Server 存储过程
+
+> **行号说明：** 计划中引用的行号基于编写时的文件状态，编辑过程中可能偏移，请以实际文件为准。
 
 **Spec:** `docs/superpowers/specs/2026-04-22-erp-recipe-integration-design.md`
 
@@ -99,6 +101,8 @@ namespace SmallGreen.Entity.Basic
 ```
 
 - [ ] **Step 2: 添加 Microsoft.Data.SqlClient NuGet 包到 SmallGreen.Entity 项目**
+
+> 注意：选择 `Microsoft.Data.SqlClient`（新版，支持 .NET 8），不使用 SqlSugar 间接引入的 `System.Data.SqlClient`（旧版）。
 
 Run: `cd SmallGreen.Entity && dotnet add package Microsoft.Data.SqlClient`
 
@@ -233,7 +237,7 @@ public static string EncodeFomulaArray(float[] values)
     var sb = new System.Text.StringBuilder();
     foreach (var val in values)
     {
-        sb.Append(val.ToString("f2").PadLeft(7, '0'));
+        sb.Append(val.ToString("0000.00", System.Globalization.CultureInfo.InvariantCulture));
         sb.Append('A');
     }
     return sb.ToString();
@@ -367,12 +371,33 @@ public async Task CheckRuntime()
 }
 ```
 
-- [ ] **Step 3: 编译验证**
+- [ ] **Step 3: 在 SystemManagerService 中添加 HandleXxx 存根方法（保持编译通过）**
+
+在 `GetSubSystem` 方法之前添加以下存根方法：
+
+```csharp
+private Task HandleEquipmentPageChanged(SubSystem subSystem, Equipment equip)
+{
+    throw new NotImplementedException("Task 7 将实现");
+}
+
+private Task HandleStartWork(SubSystem subSystem, Equipment equip)
+{
+    throw new NotImplementedException("Task 8 将实现");
+}
+
+private Task HandleOrderStatusChange(SubSystem subSystem, Equipment equip)
+{
+    throw new NotImplementedException("Task 9 将实现");
+}
+```
+
+- [ ] **Step 4: 编译验证**
 
 Run: `dotnet build SmallGreen.API/SmallGreen.API.csproj`
-Expected: BUILD FAILED（HandleXxx 方法尚未实现）— 预期行为
+Expected: BUILD SUCCEEDED
 
-- [ ] **Step 4: 提交（中间态，编译不通过）**
+- [ ] **Step 5: 提交**
 
 ```bash
 git add SmallGreen.API/Service/SystemManagerService.cs
@@ -462,7 +487,7 @@ private async Task HandleEquipmentPageChanged(SubSystem subSystem, Equipment equ
         if (equip.BtnPageChange != null)
         {
             equip.BtnPageChange.NewValue = false;
-            await subSystem.PLC.Write(equip.BtnPageChange);
+            await subSystem.PLC.Write([equip.BtnPageChange]);
         }
     }
     catch (Exception ex)
@@ -640,14 +665,14 @@ private async Task SetFomulaQueryStatus(SubSystem subSystem, Equipment equip, us
         if (equip.DataFomulaQueryStatus != null)
         {
             equip.DataFomulaQueryStatus.NewValue = status;
-            await subSystem.PLC.Write(equip.DataFomulaQueryStatus);
+            await subSystem.PLC.Write([equip.DataFomulaQueryStatus]);
         }
 
         // 重置 BtnStart
         if (equip.BtnStart != null)
         {
             equip.BtnStart.NewValue = false;
-            await subSystem.PLC.Write(equip.BtnStart);
+            await subSystem.PLC.Write([equip.BtnStart]);
         }
     }
     catch (Exception ex)
@@ -687,45 +712,40 @@ private float[] GetQCLFomular(List<RealFomula> list)
 {
     var result = new float[11]; // 桶号1-11
 
+    // 先处理组合助剂
+    var item8110 = list.Find(x => x.No == "8110");
+    var item8103 = list.Find(x => x.No == "8103");
+    var item8109 = list.Find(x => x.No == "8109");
+
+    // 8110+8103 组合为10#桶，比例15:1
+    if (item8110 != null && item8103 != null)
+    {
+        var ratio = item8110.GL / (item8103.GL > 0 ? item8103.GL : 1);
+        if (Math.Abs(ratio - 15) > 0.1f)
+        {
+            logger.LogWarning("前处理组合助剂8110+8103比例异常：{ratio}", ratio);
+        }
+        result[9] = item8110.GL + item8103.GL; // 10#桶 index=9
+    }
+
+    // 8109+8103 组合为7#桶，比例10:1
+    if (item8109 != null && item8103 != null)
+    {
+        var ratio = item8109.GL / (item8103.GL > 0 ? item8103.GL : 1);
+        if (Math.Abs(ratio - 10) > 0.1f)
+        {
+            logger.LogWarning("前处理组合助剂8109+8103比例异常：{ratio}", ratio);
+        }
+        result[6] = item8109.GL + item8103.GL; // 7#桶 index=6
+    }
+
+    // 组合助剂编号集合（已处理，不再按 BulkID 映射）
+    var combinedNos = new HashSet<string> { "8110", "8103", "8109" };
+
+    // 普通助剂：按 BulkID 直接映射
     foreach (var item in list)
     {
-        // 组合助剂特殊处理
-        if (item.No == "8110" || item.No == "8103")
-        {
-            // 8110+8103 组合为10#桶，比例15:1
-            var item8110 = list.Find(x => x.No == "8110");
-            var item8103 = list.Find(x => x.No == "8103");
-            if (item8110 != null && item8103 != null)
-            {
-                var ratio = item8110.GL / (item8103.GL > 0 ? item8103.GL : 1);
-                // 验证比例是否接近15:1（误差不超过0.1）
-                if (Math.Abs(ratio - 15) > 0.1m)
-                {
-                    logger.LogWarning("前处理组合助剂8110+8103比例异常：{ratio}", ratio);
-                }
-                result[9] = item8110.GL + item8103.GL; // 10#桶 index=9
-            }
-            continue;
-        }
-
-        if (item.No == "8109" || item.No == "8103")
-        {
-            // 8109+8103 组合为7#桶，比例10:1
-            var item8109 = list.Find(x => x.No == "8109");
-            var item8103for7 = list.Find(x => x.No == "8103");
-            if (item8109 != null && item8103for7 != null)
-            {
-                var ratio = item8109.GL / (item8103for7.GL > 0 ? item8103for7.GL : 1);
-                if (Math.Abs(ratio - 10) > 0.1m)
-                {
-                    logger.LogWarning("前处理组合助剂8109+8103比例异常：{ratio}", ratio);
-                }
-                result[6] = item8109.GL + item8103for7.GL; // 7#桶 index=6
-            }
-            continue;
-        }
-
-        // 普通助剂：按 BulkID 直接映射
+        if (combinedNos.Contains(item.No)) continue;
         if (item.BulkID >= 1 && item.BulkID <= 11)
         {
             result[item.BulkID - 1] += item.GL;
@@ -736,7 +756,7 @@ private float[] GetQCLFomular(List<RealFomula> list)
 }
 ```
 
-> **重要：** 老项目 `GetQCLFomular` 的组合助剂逻辑非常复杂（约250行），包含多个特殊映射和 `CombianAss` 合并逻辑。上面是简化版本，实施时需精确对照 `OperateSQL.cs` 第790-1043行的完整逻辑进行移植。上方的 `continue` 逻辑需要改为按 `BulkID` 直接映射优先，组合助剂逻辑作为后处理。参见 Task 8 补充说明。
+> **重要：** 老项目 `GetQCLFomular` 的组合助剂逻辑非常复杂（约250行），包含多个特殊映射和 `CombianAss` 合并逻辑。上面是简化版本，实施时需精确对照 `OperateSQL.cs` 第790-1043行的完整逻辑进行移植。
 
 - [ ] **Step 4: 实现固色配方解析方法 GetGSFomular**
 
@@ -885,7 +905,7 @@ private async Task ResetTriggerFinished(SubSystem subSystem, Equipment equip)
     if (equip.TriggerFinished != null)
     {
         equip.TriggerFinished.NewValue = false;
-        await subSystem.PLC.Write(equip.TriggerFinished);
+        await subSystem.PLC.Write([equip.TriggerFinished]);
     }
 }
 ```
@@ -935,52 +955,7 @@ git commit -m "feat: 实现订单状态回调功能(HandleOrderStatusChange)"
 
 扩展现有 `SavePRCSData` 方法，在保存本地记录之后，将用量回写到 ERP 中间库。
 
-- [ ] **Step 1: 在 SubSystem.cs 的 SavePRCSData 方法末尾添加 ERP 回写**
-
-在 `SavePRCSData` 方法中（第353行 `return new OperateResult<PRCSData> { IsSuccess = true };` 之前）插入回写逻辑。
-
-但为了保持方法单一职责，建议新增一个独立方法 `WriteBackUsageToErp`：
-
-```csharp
-/// <summary>
-/// 将配液完成数据回写到ERP中间库
-/// </summary>
-public void WriteBackUsageToErp(Equipment equipment, Bulk bulk, PRCSData prcsData, List<PRCSDataDetail> listDetail)
-{
-    try
-    {
-        // 如果是手动模式（无 uGuid），跳过回写
-        if (string.IsNullOrEmpty(equipment.uGuid) || equipment.uGuid == "手动模式")
-            return;
-
-        foreach (var detail in listDetail)
-        {
-            erpDbHelper.UpdateByProcedure("WriteBackUsage", new SqlParameter[]
-            {
-                new("@uGUID", equipment.uGuid),
-                new("@equipName", equipment.Name),
-                new("@equipID", equipment.Id),
-                new("@bulkID", bulk.CodeNumber),
-                new("@assNo", detail.AssCodeNumber ?? ""),
-                new("@assName", detail.AssName ?? ""),
-                new("@assGL", detail.AssGl),
-                new("@planKG", detail.PlanKg),
-                new("@assKG", detail.AssKg),
-                new("@planVolume", prcsData.PlanVolume),
-                new("@actualVolume", prcsData.ActualVolume)
-            });
-        }
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "{EquipmentName}-{BulkCodeNumber} ERP用量回写失败", equipment.Name, bulk.CodeNumber);
-    }
-}
-```
-
-> **注意：** `WriteBackUsageToErp` 需要 `ErpDbHelper` 实例。由于 `SubSystem` 是 Entity 层的类，不通过 DI 获取。需要在 `SystemManagerService.CheckBulkCompleted` 中调用此方法，将 `erpDbHelper` 作为参数传入，或者直接在 `SystemManagerService` 中实现回写逻辑。推荐后者，保持 Entity 层不依赖 ADO.NET。
-
-- [ ] **Step 2: 在 SystemManagerService.CheckBulkCompleted 中添加回写调用**
+- [ ] **Step 1: 在 SystemManagerService.CheckBulkCompleted 中添加回写调用**
 
 将 `CheckBulkCompleted` 方法（第89-107行）扩展为：
 
