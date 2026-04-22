@@ -5,6 +5,7 @@ using SmallGreen.Common;
 using SmallGreen.Entity;
 using SmallGreen.Entity.Basic;
 using SmallGreen.Entity.Interface;
+using SmallGreen.Entity.Data;
 using SmallGreen.Entity.Machine;
 
 namespace SmallGreen.API.Service
@@ -138,11 +139,54 @@ namespace SmallGreen.API.Service
                         if (trigger == null) continue;
                         if (trigger.GetCurrentValue() != 1) continue;
 
-
                         var result = await subSystem.SavePRCSData(equip, bulk);
-                        if (!result.IsSuccess) logger.LogError(result.Message);
+                        if (!result.IsSuccess)
+                        {
+                            logger.LogError(result.Message);
+                            continue;
+                        }
+
+                        // ERP 用量回写
+                        if (result.Content != null && result.Content.ListDetail?.Count > 0)
+                        {
+                            try
+                            {
+                                WriteBackUsageToErp(equip, bulk, result.Content, result.Content.ListDetail);
+                            }
+                            catch (Exception ex)
+                            {
+                                logger.LogError(ex, "{equipName} ERP用量回写异常", equip.Name);
+                            }
+                        }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// 将配液完成数据回写到ERP中间库
+        /// </summary>
+        private void WriteBackUsageToErp(Equipment equipment, Bulk bulk, PRCSData prcsData, List<PRCSDataDetail> listDetail)
+        {
+            if (string.IsNullOrEmpty(equipment.uGuid) || equipment.uGuid == "手动模式")
+                return;
+
+            foreach (var detail in listDetail)
+            {
+                erpDbHelper.UpdateByProcedure("WriteBackUsage", new SqlParameter[]
+                {
+                    new("@uGUID", equipment.uGuid),
+                    new("@equipName", equipment.Name),
+                    new("@equipID", equipment.Id),
+                    new("@bulkID", bulk.CodeNumber),
+                    new("@assNo", detail.AssCodeNumber ?? ""),
+                    new("@assName", detail.AssName ?? ""),
+                    new("@assGL", detail.AssGl),
+                    new("@planKG", detail.PlanKg),
+                    new("@assKG", detail.AssKg),
+                    new("@planVolume", prcsData.PlanVolume),
+                    new("@actualVolume", prcsData.ActualVolume)
+                });
             }
         }
 
