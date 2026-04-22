@@ -4,6 +4,7 @@ using Serilog;
 using SmallGreen.API.Configuration;
 using SmallGreen.API.Service;
 using SmallGreen.API.IService;
+using SmallGreen.Entity.Basic;
 
 namespace SmallGreen.API
 {
@@ -13,7 +14,7 @@ namespace SmallGreen.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // ≈‰÷√»’÷æ
+            // ÔøΩÔøΩÔøΩÔøΩÔøΩÔøΩ÷æ
             string logOutputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss} || {Level} || {SourceContext:l} || {Message} || {Exception} ||end {NewLine}";
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
@@ -27,10 +28,12 @@ namespace SmallGreen.API
             builder.Host.UseSerilog(Log.Logger, dispose: true);
             builder.Services.AddLogDashboard();
 
-            // Mapster≈‰÷√
+            // MapsterÔøΩÔøΩÔøΩÔøΩ
             MapsterConfiguration.Configure();
 
             // Add services to the container.
+            builder.Services.AddSingleton(new ErpDbHelper(builder.Configuration["ErpDbConnection"]
+                ?? throw new InvalidOperationException("ErpDbConnection Êú™ÈÖçÁΩÆ")));
             builder.Services.AddSingleton<ISystemManagerService, SystemManagerService>();
             builder.Services.AddHostedService<SmallGreenBackgroundService>();
 
