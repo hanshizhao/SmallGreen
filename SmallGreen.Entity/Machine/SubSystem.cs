@@ -244,10 +244,42 @@ namespace SmallGreen.Entity.Machine
                     {
                         var curRatio = it.Ratio / sumRatio;  // 当前助剂的混合占比
 
-                        var assKg = (realLitre * it.Concentration * curRatio) / 1000d; // 混合助剂的实际质量
-                        var effectiveAssKg = (realLitre * it.EffectiveConcentration * curRatio) / 1000d; // 财务消耗量
-                        var planKg = (prcsData.PlanVolume * formular * curRatio) / 1000d; // 混合助剂的计划质量
-                        var planVolumeWithWater = (prcsData.PlanVolume * formular * curRatio) / it.Concentration; // 混合助剂的计划体积
+                        if (it.Concentration <= 0)
+                        {
+                            return new OperateResult<PRCSData>
+                            {
+                                IsSuccess = false,
+                                Message = $"{equipment.Name}-{bulk.CodeNumber} 配液完成时，管道号<{sequence}>混合助剂<{it.Name}>浓度配置不正确: Concentration={it.Concentration} ≤ 0"
+                            };
+                        }
+
+                        // var realVolumeWithWater = realLitre * curRatio; // 按比例拆分实际体积
+                        // var assKg = (realVolumeWithWater * it.Concentration) / 1000d;
+                        // var effectiveAssKg = (realVolumeWithWater * it.EffectiveConcentration) / 1000d;
+                        // var planKg = (prcsData.PlanVolume * formular * curRatio) / 1000d;
+                        // var planVolumeWithWater = (prcsData.PlanVolume * formular * curRatio) / it.Concentration;
+                        // var p = new PRCSDataDetail
+                        // {
+                        //     AssId = it.Id,
+                        //     AssCodeNumber = it.CodeNumber,
+                        //     AssName = it.Name,
+                        //     AssGl = formular,
+                        //     AssSequence = sequence,
+                        //     AssKg = assKg,
+                        //     EffectiveAssKg = effectiveAssKg,
+                        //     PlanKg = planKg,
+                        //     GramsPerLiter = it.Concentration,
+                        //     EffectiveGramsPerLiter = it.EffectiveConcentration,
+                        //     PlanVolumeWithWater = planVolumeWithWater,
+                        //     RealVolumeWithWater = realVolumeWithWater
+                        // };
+
+                        // 混合助剂 孙哥的逻辑
+                        var realVolumeWithWater = realLitre * curRatio; // 按比例拆分实际体积
+                        var assKg = (realVolumeWithWater * it.Concentration) / 1000d;
+                        var effectiveAssKg = (realVolumeWithWater * it.EffectiveConcentration) / 1000d;
+                        var planKg = (prcsData.PlanVolume * formular * curRatio) / 1000d;
+                        var planVolumeWithWater = (prcsData.PlanVolume * formular * curRatio) / it.Concentration;
                         var p = new PRCSDataDetail
                         {
                             AssId = it.Id,
@@ -255,13 +287,18 @@ namespace SmallGreen.Entity.Machine
                             AssName = it.Name,
                             AssGl = formular,
                             AssSequence = sequence,
-                            AssKg = assKg,
+
+                            // PlanVolume(PRCSData)*AssGl(PRCSDataDetail)/GramsPerLiter(PRCSDataDetail)*EffectiveGramsPerLiter(PRCSDataDetail)*混合比例/1000
+                            // 混合比例:Ratio'(MixedDetail)/SUM(Ratio')
+                            AssKg = (prcsData.PlanVolume * formular) / it.Concentration * it.EffectiveConcentration * curRatio / 1000d,
+
+
                             EffectiveAssKg = effectiveAssKg,
                             PlanKg = planKg,
                             GramsPerLiter = it.Concentration,
                             EffectiveGramsPerLiter = it.EffectiveConcentration,
                             PlanVolumeWithWater = planVolumeWithWater,
-                            RealVolumeWithWater = realLitre
+                            RealVolumeWithWater = realVolumeWithWater
                         };
 
                         listDetail.Add(p);
@@ -270,20 +307,42 @@ namespace SmallGreen.Entity.Machine
                 else
                 {
                     // 非混合助剂，直接保存
+                    if (ass.Concentration <= 0)
+                    {
+                        return new OperateResult<PRCSData>
+                        {
+                            IsSuccess = false,
+                            Message = $"{equipment.Name}-{bulk.CodeNumber} 配液完成时，管道号<{sequence}>助剂<{ass.Name}>浓度配置不正确: Concentration={ass.Concentration} ≤ 0"
+                        };
+                    }
 
-                    /**
-                     温馨提示:
-                        1. ass.Concentration属性，表示1升助剂中有多少克的助剂质量;
-                        2. 所以助剂用量（kg）= realLitre （流量计读取到的体积） * Concentration（1升溶液中含有的助剂质量） / 1000 （换算成公斤）
-                        3. AssKg = (realLitre * ass.Concentration) / 1000d
-                     */
+                    // var p = new PRCSDataDetail
+                    // {
+                    //     AssGl = formular,
+                    //     AssId = ass.Id,
+                    //     AssSequence = sequence,
+                    //     AssKg = (realLitre * ass.Concentration) / 1000d,
+                    //     EffectiveAssKg = (realLitre * ass.EffectiveConcentration) / 1000d,
+                    //     AssName = ass.Name,
+                    //     AssCodeNumber = ass.CodeNumber,
+                    //     PlanKg = (prcsData.PlanVolume * formular) / 1000d,
+                    //     GramsPerLiter = ass.Concentration,
+                    //     EffectiveGramsPerLiter = ass.EffectiveConcentration,
+                    //     PlanVolumeWithWater = (prcsData.PlanVolume * formular) / ass.Concentration,
+                    //     RealVolumeWithWater = realLitre
+                    // };
 
+
+                    // 孙哥的逻辑
                     var p = new PRCSDataDetail
                     {
                         AssGl = formular,
                         AssId = ass.Id,
                         AssSequence = sequence,
-                        AssKg = (realLitre * ass.Concentration) / 1000d,
+
+                        // 非混合:PlanVolume(PRCSData)*AssGl(PRCSDataDetail)/GramsPerLiter(PRCSDataDetail)*EffectiveGramsPerLiter(PRCSDataDetail)/1000
+                        AssKg = (prcsData.PlanVolume * formular) / ass.Concentration * ass.EffectiveConcentration / 1000d,
+
                         EffectiveAssKg = (realLitre * ass.EffectiveConcentration) / 1000d,
                         AssName = ass.Name,
                         AssCodeNumber = ass.CodeNumber,
